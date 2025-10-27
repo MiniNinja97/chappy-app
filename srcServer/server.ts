@@ -19,7 +19,7 @@ const app: Express = express();
 const port: number = Number(process.env.PORT) || 1337;
 const jwtSecret = process.env.JWT_SECRET || '';
 
-console.log("JWT_SECRET laddad:", process.env.JWT_SECRET ? "✅ Ja!" : "❌ Nej!");
+console.log("JWT_SECRET laddad:", process.env.JWT_SECRET ? " Ja, den laddar" : "Nej, laddas inte");
 
 app.use(express.static('./dist/'));
 app.use(express.json());
