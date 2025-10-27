@@ -1,7 +1,6 @@
-// validation.ts
+
 import { z, type ZodSchema } from 'zod';
-import type { Request, Response, NextFunction } from 'express';
-import e from 'express';
+
 
 
 export const signUpSchema = z.object({

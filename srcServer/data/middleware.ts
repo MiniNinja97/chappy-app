@@ -11,7 +11,7 @@ export const logger: RequestHandler = (req, _res, next) => {
   next();
 };
 
-// Ladda JWT-hemlighet 
+// Ladda JWT hemlig nyckel 
  
 const RAW_SECRET = process.env.JWT_SECRET;
 if (!RAW_SECRET) {
@@ -29,7 +29,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return;
   }
 
-  // Ta ut token-delen (tar bort "Bearer " → 7 tecken)
+  // Ta ut token-delen, tar bort Bearer 7 tecken
   const token = authHeader.substring(7);
 
   try {
@@ -78,7 +78,7 @@ export const validateBody = (schema: ZodSchema): RequestHandler => {
   };
 };
 
-//Response-validering (valfritt)
+//Response-validering 
  
 export const validateResponse = (schema: ZodSchema, data: unknown, res: Response): boolean => {
   const parsed = schema.safeParse(data);

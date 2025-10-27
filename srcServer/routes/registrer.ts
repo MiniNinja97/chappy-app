@@ -1,4 +1,4 @@
-// srcServer/routes/registrer.ts
+
 import express, { type Router, type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -24,11 +24,13 @@ const JWT_SECRET = RAW_SECRET;
 function signJwt(userId: string) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
 }
+
+
 const normalizeUsername = (u: string) => u.trim().toLowerCase();
 
 
 
-// Svarstyp för ett lyckat register-svar
+//  lyckad register
 type RegisterOk = {
   message: string;
   token: string;
@@ -66,14 +68,14 @@ router.post(
         passwordHash,
       };
 
-      // lookup-item: username → userId (för login utan Query/Scan)
+      // lookup-item: username = userId (för login utan Query eller Scan)
       const usernameLookupItem = {
         PK: `USERNAME#${normalized}`,
         SK: "METADATA",
         userId,
       };
 
-      // lookup först (unikhetskontroll), sedan user
+      // lookup först, för att kolla att användaren är helt unik, sedan user
       const putLookup = new PutCommand({
         TableName: tableName,
         Item: usernameLookupItem,
@@ -88,7 +90,7 @@ router.post(
       });
       await db.send(putUser);
 
-      // JWT och sanity-kolla mot ditt schema
+      // JWT matchar mot schema
       const token = signJwt(userId);
       const decoded = jwt.verify(token, JWT_SECRET);
       const parsed = jwtPayloadSchema.safeParse(decoded);

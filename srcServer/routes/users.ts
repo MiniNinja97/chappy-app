@@ -2,7 +2,6 @@ import express from 'express';
 import type { Router, Request, Response } from 'express';
 import { db, tableName } from '../data/dynamoDb.js';
 import { DeleteCommand, ScanCommand, type ScanCommandOutput } from '@aws-sdk/lib-dynamodb';
-import { z } from 'zod';
 import type { User, ResponseMessage } from '../data/types.js';
 import { userIdParamSchema } from '../data/validation.js';
 
@@ -10,7 +9,7 @@ const router: Router = express.Router();
 
 
 
-// GET /api/users - Hämta alla användare
+// GET /api/users - hämtar alla användare
 router.get('/', async (_req: Request, res: Response<User[] | ResponseMessage>) => {
   try {
     const command = new ScanCommand({
@@ -34,7 +33,7 @@ router.get('/', async (_req: Request, res: Response<User[] | ResponseMessage>) =
   }
 });
 
-// DELETE /api/users/:id - Radera en användare
+// DELETE /api/users/:id - radera en användare
 router.delete('/:id', async (req: Request, res: Response<ResponseMessage>) => {
   try {
     const { id } = userIdParamSchema.parse(req.params);

@@ -1,10 +1,10 @@
-// srcServer/routes/dmMessage.ts
+
 import express, { type Router, type Request, type Response } from "express";
 import { db, tableName } from "../data/dynamoDb.js";
 import { ScanCommand, type ScanCommandOutput, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import type { ResponseMessage } from "../data/types.js";
 
-import { z } from "zod";
+
 import { authMiddleware } from "../data/middleware.js";
 import { createDmSchema } from "../data/validation.js";
 import { validateBody } from "../data/middleware.js";
@@ -14,7 +14,7 @@ const router: Router = express.Router();
 // GET /api/messages
 
 
- //Hämta alla direktmeddelanden (items där PK börjar med "MSG#")
+ //Hämta alla direktmeddelanden, items där PK börjar med "MSG#"
  
 router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) => {
   try {
@@ -32,7 +32,7 @@ router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) =>
       return res.status(404).send({ message: "Inga meddelanden hittades" });
     }
 
-    // Sortera på SK (format: "Timestamp#<ISO>") – nyast först
+    // Sortera på SK Timestamp# 
     const sorted = [...result.Items].sort((a, b) =>
       String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
     );
@@ -46,11 +46,11 @@ router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) =>
 
 router.post(
   "/",
-  authMiddleware,               // 🔐 kräver inloggning
-  validateBody(createDmSchema), // ✅ använder din befintliga validering
+  authMiddleware,               
+  validateBody(createDmSchema), 
   async (req: Request, res: Response) => {
     try {
-      // 💬 Dina fält från body (redan validerade av Zod)
+      //  body (redan validerade av zod)
       const { content, receiverId } = req.body;
       const senderId = String(req.userId);
 
@@ -59,12 +59,12 @@ router.post(
         return res.status(401).send({ message: "Ingen giltig användaridentitet i token" });
       }
 
-      // hindra att man skickar till sig själv
+      // så man inte skickar till sig själv
       if (senderId === receiverId) {
         return res.status(400).send({ message: "Du kan inte skicka meddelande till dig själv" });
       }
 
-      // kolla att mottagaren finns
+      // kolla att receiver finns
       const checkReceiver = new GetCommand({
         TableName: tableName,
         Key: {

@@ -1,4 +1,4 @@
-// srcServer/routes/login.ts
+
 import express, { type Router, type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -48,7 +48,7 @@ router.post(
       const userId: string =
         (lookupRes.Item as any).userId ?? (lookupRes.Item as any).UserId;
 
-      // Hämta användaren via userId
+      // hämta användaren via userId
       const getUser = new GetCommand({
         TableName: tableName,
         Key: { PK: `USER#${userId}`, SK: "METADATA" },
@@ -60,16 +60,16 @@ router.post(
       }
       const user = userRes.Item as User;
 
-      // 3) Verifiera lösenord
+      //Verifiera lösenord
       const ok = await bcrypt.compare(password, user.passwordHash);
       if (!ok) {
         return res.status(401).send({ message: "Fel användarnamn eller lösenord" });
       }
 
-      // 4) Skapa token
+      // Gör token
       const token = signJwt(user.userId ?? (user as any).UserId);
 
-      // (valfritt) sanity-check: matchar ditt jwtPayloadSchema
+      // (valfritt) matchar med jwtPayloadSchema
       const decoded = jwt.verify(token, JWT_SECRET);
       const parsed = jwtPayloadSchema.safeParse(decoded);
       if (!parsed.success) {
