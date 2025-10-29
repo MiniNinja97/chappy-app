@@ -1,18 +1,14 @@
 
-import 'dotenv/config';
+// import 'dotenv/config';
 import express from 'express';
 import type { Express, Request, Response } from 'express';
 import { logger } from './data/middleware.js';
 import cors from 'cors';
 import userRouter from './routes/users.js';
-import {
-  authMiddleware,
-  validateBody,
-  validateResponse,
-} from './data/middleware.js';
 import registrerRouter from "./routes/registrer.js";
 import loginRouter from "./routes/login.js";
 import dmMessagesRouter from "./routes/dmMessage.js";
+import channelsRouter from "./routes/channels.js";
 
 
 const app: Express = express();
@@ -40,6 +36,8 @@ app.use("/api/users", registrerRouter);
 app.use("/api/auth", loginRouter);
 
 app.use("/api/messages", dmMessagesRouter);
+
+app.use("/api/channels", channelsRouter);
 
 app.listen(port, (error?: Error) => {
   if (error) {

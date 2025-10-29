@@ -22,13 +22,13 @@ export interface DmMessage{
 export interface ChannelMessage{
     content: string;
     senderId: string;
-    receverId: string;
+    receverId: string; //mottagare finns inte eftersom det är till kanalen
     type: string;
 }
 
 export interface Channel{
     content: string;
-    receiverId: string;
+    receiverId: string; //skapar ID till kanalen
     senderId: string;
     type: string;
 }

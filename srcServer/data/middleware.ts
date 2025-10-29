@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import type { ZodSchema } from "zod";
 import { jwtPayloadSchema } from "./validation.js";
+import z from "zod";
 
 
 export const logger: RequestHandler = (req, _res, next) => {
@@ -69,7 +70,7 @@ export const validateBody = (schema: ZodSchema): RequestHandler => {
       res.status(400).send({
         success: false,
         message: "Valideringsfel",
-        errors: result.error.flatten(),
+        errors: z.flattenError(result.error)
       });
       return;
     }

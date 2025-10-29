@@ -10,7 +10,7 @@ const router: Router = express.Router();
 
 
 // GET /api/users - hämtar alla användare
-router.get('/', async (_req: Request, res: Response<User[] | ResponseMessage>) => {
+router.get('/', async (req: Request, res: Response<User[] | ResponseMessage>) => {
   try {
     const command = new ScanCommand({
       TableName: tableName,
