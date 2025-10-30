@@ -46,7 +46,7 @@ router.post(
         return res.status(401).send({ message: "Fel användarnamn eller lösenord" });
       }
       const userId: string =
-        (lookupRes.Item as any).userId ?? (lookupRes.Item as any).UserId;
+        (lookupRes.Item as any).userId ?? (lookupRes.Item as any).userId;
 
       // hämta användaren via userId
       const getUser = new GetCommand({
@@ -80,8 +80,8 @@ router.post(
         message: "Inloggad",
         token,
         user: {
-          userId: user.userId ?? (user as any).UserId,
-          username: user.Username,
+          userId: user.userId ?? (user as any).userId,
+          username: user.username,
           accessLevel: user.accessLevel,
           type: user.type,
         },

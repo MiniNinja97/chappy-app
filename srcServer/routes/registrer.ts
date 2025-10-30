@@ -62,9 +62,9 @@ router.post(
         PK: `USER#${userId}`,
         SK: "METADATA",
         userId,
-        Username: normalized,         // spara normaliserad variant
+        username: normalized,         // spara normaliserad variant
         accessLevel: "user",
-        type: "user",
+        type: "USER",
         passwordHash,
       };
 
@@ -104,7 +104,7 @@ router.post(
         token,
         user: {
           userId,
-          username: newUser.Username,
+          username: newUser.username,
           accessLevel: newUser.accessLevel,
           type: newUser.type,
         },

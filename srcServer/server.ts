@@ -9,6 +9,7 @@ import registrerRouter from "./routes/registrer.js";
 import loginRouter from "./routes/login.js";
 import dmMessagesRouter from "./routes/dmMessage.js";
 import channelsRouter from "./routes/channels.js";
+import channelMessagesRouter from "./routes/channelMessage.js"
 
 
 const app: Express = express();
@@ -38,6 +39,8 @@ app.use("/api/auth", loginRouter);
 app.use("/api/messages", dmMessagesRouter);
 
 app.use("/api/channels", channelsRouter);
+
+app.use("/api/channel-messages", channelMessagesRouter);
 
 app.listen(port, (error?: Error) => {
   if (error) {

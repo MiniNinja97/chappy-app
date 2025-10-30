@@ -23,6 +23,7 @@ export const channelMessageSchema = z.object({
   content: z.string().min(1).max(500),
   receiverId: z.string().min(1),
   senderId: z.string().min(1),
+  channelId: z.string().min(1)
 });
 
 export const channelSchema = z.object({
@@ -52,6 +53,11 @@ export const createDmSchema = z.object({
   
 });
 
+export const createChannelMessageSchema = z.object({
+  channelId: z.string().min(1, "channelId krävs"),
+  content: z.string().min(1, "content krävs").max(5000),
+});
+
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -62,5 +68,6 @@ export type UserInput = z.infer<typeof userSchema>;
 export type JWTPayload = z.infer<typeof jwtPayloadSchema>;
 export type UserIdParam = z.infer<typeof userIdParamSchema>;
 export type CreateDmInput = z.infer<typeof createDmSchema>;
+
 
 

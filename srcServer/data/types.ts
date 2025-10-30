@@ -1,40 +1,44 @@
 
-
-
-export interface User{
-    PK: string;
-    SK: string;
-    userId: string;
-    Username: string;
-    accessLevel: string; 
-    type: string;
-    passwordHash: string;   
-
+export interface User {
+  PK: string;                  // "USER#<userId>"
+  SK: string;                  // "METADATA"
+  userId: string;              // "<uuid>"
+  username: string;            
+  accessLevel: string;        
+  type: "USER";
+  passwordHash: string;
 }
 
-export interface DmMessage{
-    content: string;
-    recieverId: string;
-    senderId: string;
-    type: string;
+export interface DmMessage {
+  PK: string;                  // "MSG#<A>#<B>" (A/B = userIds sorterade)
+  SK: string;                  // "Timestamp#<ISO>"
+  content: string;
+  senderId: string;            // avsändarens userId
+  receiverId: string;          // mottagarens userId
+  type: "MESSAGE";
 }
 
-export interface ChannelMessage{
-    content: string;
-    senderId: string;
-    receverId: string; //mottagare finns inte eftersom det är till kanalen
-    type: string;
+export interface ChannelMessage {
+  PK: string;                  // "CHANNELMSG#<channelId>"
+  SK: string;                  // "Timestamp#<ISO>"
+  content: string;
+  senderId: string;            // avsändarens userId
+  type: "MESSAGE";
 }
 
-export interface Channel{
-    content: string;
-    receiverId: string; //skapar ID till kanalen
-    senderId: string;
-    type: string;
+
+export interface Channel {
+  PK: string;                  // "CHANNEL#<channelId>"
+  SK: "CHANNELMETA";
+  channelId: string;           // ex. "c456" eller uuid
+  channelName: string;        
+  access: "public" | "private";
+  creatorId: string;           // userId som skapade kanalen
+  creatorPK: string;           // "USER#<creatorId>"
+  type: "CHANNEL";
 }
-export type ResponseMessage = {
-  message: string;
-};
+
+export type ResponseMessage = { message: string };
 
 
 
