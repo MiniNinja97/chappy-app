@@ -1,52 +1,85 @@
 
-// import 'dotenv/config';
-import express from 'express';
-import type { Express, Request, Response } from 'express';
-import { logger } from './data/middleware.js';
-import cors from 'cors';
-import userRouter from './routes/users.js';
+
+import express, { type Express, type Request, type Response } from "express";
+import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
+
+import { logger } from "./data/middleware.js";
+import userRouter from "./routes/users.js";
 import registrerRouter from "./routes/registrer.js";
 import loginRouter from "./routes/login.js";
 import dmMessagesRouter from "./routes/dmMessage.js";
 import channelsRouter from "./routes/channels.js";
-import channelMessagesRouter from "./routes/channelMessage.js"
-
+import channelMessagesRouter from "./routes/channelMessage.js";
 
 const app: Express = express();
+
+// Backendporten på 1337
 const port: number = Number(process.env.PORT) || 1337;
-const jwtSecret = process.env.JWT_SECRET || '';
+const jwtSecret = process.env.JWT_SECRET || "";
 
-console.log("JWT_SECRET laddad:", process.env.JWT_SECRET ? " Ja, den laddar" : "Nej, laddas inte");
-
-app.use(express.static('./dist/'));
+// Bas-middleware
+app.use(express.static("./dist/"));
 app.use(express.json());
 app.use(logger);
-app.use(cors());
+
+// CORS – frontend på port 5173
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 
-
-// Registrera övriga routrar
-app.use('/api/users', userRouter);
-
-app.get('/api/ping', (req: Request, res: Response) => {
-  res.send({ message: 'Pong' });
+app.get("/api/ping", (req: Request, res: Response) => {
+  res.send({ message: "Pong" });
 });
 
-app.use("/api/users", registrerRouter);
-
+// Routrar 
+app.use("/api/users", userRouter);
+app.use("/api/register", registrerRouter);
 app.use("/api/auth", loginRouter);
-
 app.use("/api/messages", dmMessagesRouter);
-
 app.use("/api/channels", channelsRouter);
-
 app.use("/api/channel-messages", channelMessagesRouter);
 
-app.listen(port, (error?: Error) => {
+// Skapa HTTP-server och Socket.io
+const server = http.createServer(app);
+export const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173"], // frontend
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Socket.io-hantering
+io.on("connection", (socket) => {
+  console.log("En användare anslöt:", socket.id);
+
+  socket.on("chat message", (msg: string) => {
+    // broadcast till alla
+    io.emit("chat message", msg);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Användare kopplade från:", socket.id);
+  });
+});
+
+console.log(
+  "JWT_SECRET laddad:",
+  jwtSecret ? "Ja, den laddar" : "Nej, laddas inte"
+);
+
+// Starta servern 
+server.listen(port, (error?: Error) => {
   if (error) {
-    console.log('Server could not start! ', (error as any).message);
+    console.log("Server could not start! ", (error as any).message);
   } else {
     console.log(`Server is listening on port ${port}...`);
   }
 });
-
