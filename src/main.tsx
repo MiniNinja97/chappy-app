@@ -8,6 +8,7 @@ import Login from "./components/login";
 import FrontPage from "./components/frontPage";
 
 import Register from "./components/register";
+import dmPage from "./components/dmPage";
 
 const router = createHashRouter([
   {
@@ -17,7 +18,8 @@ const router = createHashRouter([
       { index: true, Component: Login },          
       { path: "login", Component: Login },        
       { path: "frontPage", Component: FrontPage },
-      { path: "register", Component: Register } 
+      { path: "register", Component: Register },
+      { path: "dm/:userId", Component: dmPage }
     ],
   },
 ]);

@@ -48,9 +48,9 @@ export const userIdParamSchema = z.object({
 });
 
 export const createDmSchema = z.object({
-  content: z.string().min(1).max(500),
-  receiverId: z.string().min(1)
-  
+  content: z.string().min(1),
+  receiverId: z.string().min(1),
+  guestId: z.string().min(1).optional(), 
 });
 
 export const createChannelMessageSchema = z.object({

@@ -1,6 +1,7 @@
 
 
 import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 
 
 export interface User {
@@ -10,12 +11,27 @@ export interface User {
   type: "USER";
 }
 
+const LS_KEY = "jwt";
+
+// liten hjälpfunktion för att plocka userId från JWT
+function getUserIdFromJWT(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return typeof payload?.userId === "string" ? payload.userId : null;
+  } catch {
+    return null;
+  }
+}
+
 
 export default function FrontPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+
+  const me = getUserIdFromJWT(localStorage.getItem(LS_KEY));
 
   const loadUsers = useCallback(async () => {
     setError("");
@@ -35,15 +51,15 @@ export default function FrontPage() {
         (u) => u.type === "USER" && u.accessLevel === "user"
       );
 
-      setUsers(registeredOnly);
+      // (valfritt) visa inte dig själv i listan
+      setUsers(me ? registeredOnly.filter(u => u.userId !== me) : registeredOnly);
     } catch {
       setError("Nätverksfel. Försök igen");
       setUsers([]);
-
-    }finally {
+    } finally {
       setLoading(false);
     }
-  }, []); //kolla upp vad finally betyder och varför det är en tom array i slutet
+  }, [me]); //kolla upp vad finally betyder och varför det är en tom array i slutet
 
   useEffect(() => {
     loadUsers();
@@ -63,8 +79,11 @@ export default function FrontPage() {
       {!loading && !error && (
         <ul>
           {users.map((u) => (
-            <li key={u.userId}>{u.username}</li>
+            <li key={u.userId}>
+              <Link to={`/dm/${u.userId}`}>{u.username}</Link>
+            </li>
           ))}
+          {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
         </ul>
       )}
     </section>

@@ -1,42 +1,49 @@
 
+// routes/dmMessage.ts
 import express, { type Router, type Request, type Response } from "express";
+import jwt from "jsonwebtoken";
 import { db, tableName } from "../data/dynamoDb.js";
-import { ScanCommand, type ScanCommandOutput, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import type { ResponseMessage } from "../data/types.js";
-
-
-import { authMiddleware } from "../data/middleware.js";
-import { createDmSchema } from "../data/validation.js";
+import { ScanCommand, PutCommand, GetCommand, type ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { validateBody } from "../data/middleware.js";
+import { createDmSchema } from "../data/validation.js"; // vi utökar denna nedan
+import type { ResponseMessage } from "../data/types.js";
 
 const router: Router = express.Router();
 
-// GET /api/messages
+const RAW_SECRET = process.env.JWT_SECRET;
+if (!RAW_SECRET) throw new Error("JWT_SECRET saknas");
+const JWT_SECRET = RAW_SECRET;
 
+function getUserIdFromAuthHeader(req: Request): string | null {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) return null;
+  const token = auth.slice("Bearer ".length);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string };
+    return typeof decoded.userId === "string" ? decoded.userId : null;
+  } catch {
+    return null;
+  }
+}
 
- //Hämta alla direktmeddelanden, items där PK börjar med "MSG#"
- 
+// --- GET /api/messages (oförändrad) ---
 router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) => {
   try {
-    const command = new ScanCommand({
-      TableName: tableName,
-      FilterExpression: "begins_with(PK, :prefix)",
-      ExpressionAttributeValues: {
-        ":prefix": "MSG#",              
-      },
-    });
-
-    const result: ScanCommandOutput = await db.send(command);
+    const result: ScanCommandOutput = await db.send(
+      new ScanCommand({
+        TableName: tableName,
+        FilterExpression: "begins_with(PK, :prefix)",
+        ExpressionAttributeValues: { ":prefix": "MSG#" },
+      })
+    );
 
     if (!result.Items || result.Items.length === 0) {
       return res.status(404).send({ message: "Inga meddelanden hittades" });
     }
 
-    // Sortera på SK Timestamp# 
     const sorted = [...result.Items].sort((a, b) =>
       String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
     );
-
     return res.status(200).send(sorted);
   } catch (err) {
     console.error("Failed to scan messages:", err);
@@ -44,62 +51,50 @@ router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) =>
   }
 });
 
+// --- POST /api/messages (JWT frivilligt + guestId stöds) ---
 router.post(
   "/",
-  authMiddleware,               
-  validateBody(createDmSchema), 
+  validateBody(createDmSchema),   // se ändring i validation.ts nedan
   async (req: Request, res: Response) => {
     try {
-      //  body (redan validerade av zod)
-      const { content, receiverId } = req.body;
-      const senderId = String(req.userId);
+      const jwtUserId = getUserIdFromAuthHeader(req); // kan vara null
+      const { content, receiverId, guestId } = req.body as {
+        content: string;
+        receiverId: string;
+        guestId?: string;
+      };
 
-      // extra säkerhet
-      if (typeof req.userId !== "string") {
-        return res.status(401).send({ message: "Ingen giltig användaridentitet i token" });
+      // säkerhet: receiver måste finnas
+      const receiver = await db.send(
+        new GetCommand({ TableName: tableName, Key: { PK: `USER#${receiverId}`, SK: "METADATA" } })
+      );
+      if (!receiver.Item) {
+        return res.status(404).send({ message: "Mottagaren hittades inte" });
       }
 
-      // så man inte skickar till sig själv
+      // bestäm senderId
+      const senderId =
+        jwtUserId ??
+        (guestId && guestId.trim() ? `GUEST#${guestId.trim()}` : null);
+
+      if (!senderId) {
+        return res
+          .status(400)
+          .send({ message: "Saknar identitet: ange guestId i body eller skicka JWT." });
+      }
+
       if (senderId === receiverId) {
         return res.status(400).send({ message: "Du kan inte skicka meddelande till dig själv" });
       }
 
-      // kolla att receiver finns
-      const checkReceiver = new GetCommand({
-        TableName: tableName,
-        Key: {
-          PK: `USER#${receiverId}`,
-          SK: "METADATA",
-        },
-      });
-
-      const receiverResult = await db.send(checkReceiver);
-      if (!receiverResult.Item) {
-        return res.status(404).send({ message: "Mottagaren hittades inte" });
-      }
-
-      // skapa PK och SK
+      // PK/ SK för konversation (sortera A, B för stabil nyckel)
       const [A, B] = [senderId, receiverId].sort((x, y) => x.localeCompare(y));
       const pk = `MSG#${A}#${B}`;
       const sk = `Timestamp#${new Date().toISOString()}`;
 
-      // nytt meddelande
-      const item = {
-        PK: pk,
-        SK: sk,
-        content,
-        senderId,
-        receiverId,
-        type: "MESSAGE",
-      };
+      const item = { PK: pk, SK: sk, content, senderId, receiverId, type: "MESSAGE" };
 
-      // spara i DynamoDB
-      await db.send(
-        new PutCommand({
-          TableName: tableName,
-          Item: item,
-        })
-      );
+      await db.send(new PutCommand({ TableName: tableName, Item: item }));
 
       return res.status(201).send({
         success: true,
@@ -108,14 +103,14 @@ router.post(
       });
     } catch (err) {
       console.error("Failed to send message:", err);
-      return res.status(500).send({
-        success: false,
-        message: "Internt serverfel vid skick av meddelande",
-      });
+      return res
+        .status(500)
+        .send({ success: false, message: "Internt serverfel vid skick av meddelande" });
     }
   }
 );
 
 export default router;
+
 
 
