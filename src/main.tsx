@@ -9,6 +9,8 @@ import FrontPage from "./components/frontPage";
 
 import Register from "./components/register";
 import dmPage from "./components/dmPage";
+import channelsPage from "./components/channelsPage";
+import ChannelChat from "./components/ChannelChat";
 
 const router = createHashRouter([
   {
@@ -19,7 +21,9 @@ const router = createHashRouter([
       { path: "login", Component: Login },        
       { path: "frontPage", Component: FrontPage },
       { path: "register", Component: Register },
-      { path: "dm/:userId", Component: dmPage }
+      { path: "dm/:userId", Component: dmPage },
+      {path: "channels", Component: channelsPage},
+      { path: "channels/:channelId", Component: ChannelChat }
     ],
   },
 ]);

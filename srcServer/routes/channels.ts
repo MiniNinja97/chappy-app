@@ -84,7 +84,11 @@ router.post(
   validateBody(channelSchema),
   async (req: Request, res: Response) => {
     try {
-      const { name, description } = req.body as { name: string; description?: string };
+      const { name, description, access = "public" } = req.body as {
+        name: string;
+        description?: string;
+        access?: "public" | "locked";
+      };
 
       if (typeof req.userId !== "string") {
         return res.status(401).send({ message: "Ingen giltlig token" });
@@ -99,7 +103,7 @@ router.post(
         type: "CHANNEL",
         channelId,
         channelName: name,
-        access: "public",
+        access: access === "locked" ? "locked" : "public",
         creatorId,
         creatorPK: `USER#${creatorId}`,
         description: description ?? null,
@@ -113,10 +117,7 @@ router.post(
         })
       );
 
-      return res.status(201).send({
-        message: "Kanal skapad",
-        channel: item,
-      });
+      return res.status(201).send({ message: "Kanal skapad", channel: item });
     } catch (err: any) {
       if (err?.name === "ConditionalCheckFailedException") {
         return res.status(409).send({ message: "Kunde inte skapa en ny kanal" });

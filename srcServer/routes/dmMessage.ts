@@ -57,31 +57,28 @@ router.post(
   validateBody(createDmSchema),   // se ändring i validation.ts nedan
   async (req: Request, res: Response) => {
     try {
-      const jwtUserId = getUserIdFromAuthHeader(req); // kan vara null
-      const { content, receiverId, guestId } = req.body as {
+      const jwtUserId = getUserIdFromAuthHeader(req); 
+      if (!jwtUserId) {
+        return res.status(401).send({ message: "Logga in för att skicka DM" });
+      }
+      const { content, receiverId } = req.body as {
         content: string;
         receiverId: string;
-        guestId?: string;
       };
 
       // säkerhet: receiver måste finnas
       const receiver = await db.send(
-        new GetCommand({ TableName: tableName, Key: { PK: `USER#${receiverId}`, SK: "METADATA" } })
+        new GetCommand({
+          TableName: tableName,
+          Key: { PK: `USER#${receiverId}`, SK: "METADATA" },
+        })
       );
       if (!receiver.Item) {
         return res.status(404).send({ message: "Mottagaren hittades inte" });
       }
 
       // bestäm senderId
-      const senderId =
-        jwtUserId ??
-        (guestId && guestId.trim() ? `GUEST#${guestId.trim()}` : null);
-
-      if (!senderId) {
-        return res
-          .status(400)
-          .send({ message: "Saknar identitet: ange guestId i body eller skicka JWT." });
-      }
+      const senderId = jwtUserId;
 
       if (senderId === receiverId) {
         return res.status(400).send({ message: "Du kan inte skicka meddelande till dig själv" });

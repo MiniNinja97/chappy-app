@@ -29,6 +29,7 @@ export const channelMessageSchema = z.object({
 export const channelSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(300).optional(),
+  access: z.enum(["public", "locked"]).optional().default("public"),
 });
 
 export const userSchema = z.object({

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const LS_KEY_JWT = "jwt";
 const LS_KEY_GUEST = "guestId";
 
 type DmMessage = {
-  PK: string;           // "MSG#A#B"
-  SK: string;           // "Timestamp#..."
+  PK: string;           
+  SK: string;           
   content: string;
   senderId: string;
   receiverId: string;
@@ -17,7 +17,7 @@ function getJwtUserId(token: string | null): string | null {
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    // Viktigt: fältet heter userId med versalt I
+    // Viktigt!! fältet heter userId med STORT I
     return typeof payload?.userId === "string" ? payload.userId : null;
   } catch {
     return null;
@@ -34,15 +34,16 @@ function ensureGuestId(): string {
 }
 
 export default function DmPage() {
-  // Parametern heter userId i din route: /dm/:userId
+  // Parametern heter userId i route /dm/:userId
   const { userId: otherId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
 
   const jwt = localStorage.getItem(LS_KEY_JWT);
   const userId = getJwtUserId(jwt);
-  // min identitet: registrerad user eller gästprefix
+  //  registrerad user eller gästanvändare
   const myId = userId ?? `GUEST#${ensureGuestId()}`;
 
-  // ---- State: rätt typer ----
+  
   const [allMessages, setAllMessages] = useState<DmMessage[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,7 +71,11 @@ export default function DmPage() {
     }
   }, [otherId]);
 
-  // Konversationen mellan mig och den valda användaren
+  // Konversationen mellan mig och användaren jag valt att skriva med
+  // useMemo minns ett värde, det minskar onödig filtrering/sortering
+  //  convo är den aktiva tråden mellan myId/jag som skickar meddelandet och otherId som tar emot meddelandet
+  //  Returnerar tom lista om vi saknar otherId.
+  //  Sorterar resultaten på SK med localeCompare, useMemo körs om när allMessages/myId/otherId ändras
   const convo = useMemo<DmMessage[]>(() => {
     if (!otherId) return [];
     return allMessages
@@ -81,7 +86,7 @@ export default function DmPage() {
       )
       .sort((a, b) => String(a.SK).localeCompare(String(b.SK)));
   }, [allMessages, myId, otherId]);
-
+ // hämtar meddelanden när man kommer in i chatten/öppnar fönstret
   useEffect(() => {
     loadMessages();
     const onFocus = () => loadMessages();
@@ -89,18 +94,18 @@ export default function DmPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadMessages]);
 
-  // ——— Skicka meddelande ———
+  // Skicka meddelande 
   async function handleSend() {
     if (!otherId) return;
     const trimmed = content.trim();
     if (!trimmed) return;
 
     try {
-      // Typa headers
+      
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (jwt) headers.Authorization = `Bearer ${jwt}`; // utan kolon
+      if (jwt) headers.Authorization = `Bearer ${jwt}`; 
 
-      // Typa body utan any
+      
       type BodyWithJwt = { content: string; receiverId: string };
       type BodyGuest = BodyWithJwt & { guestId: string };
 
@@ -130,6 +135,7 @@ export default function DmPage() {
 
   return (
     <section>
+         <button onClick={() => navigate("/frontPage")}>⬅ Tillbaka</button>
       <h2>Direktmeddelanden</h2>
       {loading && <p>Laddar…</p>}
       {error && !loading && <p>{error}</p>}
@@ -159,3 +165,4 @@ export default function DmPage() {
     </section>
   );
 }
+

@@ -1,7 +1,7 @@
 
 
 import { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 export interface User {
@@ -32,6 +32,7 @@ export default function FrontPage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   const me = getUserIdFromJWT(localStorage.getItem(LS_KEY));
+  const navigate = useNavigate();
 
   const loadUsers = useCallback(async () => {
     setError("");
@@ -39,19 +40,18 @@ export default function FrontPage() {
     try {
       const res = await fetch("http://localhost:1337/api/users");
       if(!res.ok) {
-        const body = await res.json().catch(() => null); //ska kolla varfrö null och om jag kan ha send och inte json
+        const body = await res.json().catch(() => null); 
         setError(body?.message ?? "Kunde inte hämta användare");
         setUsers([]);
         return;
       }
 
-      const data = (await res.json()) as User[];// måste kolla upp att as är korrekt
-
+      const data = (await res.json()) as User[];
       const registeredOnly = data.filter(
         (u) => u.type === "USER" && u.accessLevel === "user"
       );
 
-      // (valfritt) visa inte dig själv i listan
+      //  visa inte mig själv/användaren som är inloggad i listan
       setUsers(me ? registeredOnly.filter(u => u.userId !== me) : registeredOnly);
     } catch {
       setError("Nätverksfel. Försök igen");
@@ -59,7 +59,7 @@ export default function FrontPage() {
     } finally {
       setLoading(false);
     }
-  }, [me]); //kolla upp vad finally betyder och varför det är en tom array i slutet
+  }, [me]);  
 
   useEffect(() => {
     loadUsers();
@@ -69,7 +69,7 @@ export default function FrontPage() {
   }, [loadUsers]);
 
 
-
+const isLoggedIn = Boolean(localStorage.getItem(LS_KEY));
 
   return (
     <section>
@@ -78,17 +78,36 @@ export default function FrontPage() {
       {error && <p>{error}</p>}
       {!loading && !error && (
         <ul>
-          {users.map((u) => (
-            <li key={u.userId}>
-              <Link to={`/dm/${u.userId}`}>{u.username}</Link>
-            </li>
-          ))}
-          {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
-        </ul>
+  {users.map((u) => (
+    <li key={u.userId}>
+      {isLoggedIn ? (
+        <Link to={`/dm/${u.userId}`}>{u.username}</Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          title="Logga in för att skicka DM"
+          style={{
+            opacity: 0.5,
+            cursor: "not-allowed",
+            background: "none",
+            border: "none",
+            color: "inherit",
+          }}
+        >
+          {u.username}
+        </button>
       )}
+    </li>
+  ))}
+  {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
+</ul>
+      )}
+      <button type="button" onClick={() => navigate("/channels")}>Visa kanaler</button>
     </section>
   );
 }
+
 
 
 

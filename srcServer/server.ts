@@ -55,15 +55,43 @@ export const io = new Server(server, {
     credentials: true,
   },
 });
+function roomName(channelId: string) {
+  return `channel:${channelId}`;
+}
 
 // Socket.io-hantering
 io.on("connection", (socket) => {
   console.log("En användare anslöt:", socket.id);
 
-  socket.on("chat message", (msg: string) => {
-    // broadcast till alla
-    io.emit("chat message", msg);
+  socket.on("channel:join", ({ channelId }: { channelId: string }) => {
+    if (channelId) socket.join(roomName(channelId));
   });
+
+  socket.on("channel:leave", ({ channelId }: { channelId: string }) => {
+    if (channelId) socket.leave(roomName(channelId));
+  });
+
+  socket.on(
+    "channel:message",
+    ({
+      channelId,
+      msg,
+    }: {
+      channelId: string;
+      msg: {
+        PK: string;
+        SK: string;
+        type: "MESSAGE";
+        receiverId: string;
+        senderId: string;
+        content: string;
+      };
+    }) => {
+      if (channelId) {
+        io.to(roomName(channelId)).emit("channel:message", { channelId, msg });
+      }
+    }
+  );
 
   socket.on("disconnect", () => {
     console.log("Användare kopplade från:", socket.id);
