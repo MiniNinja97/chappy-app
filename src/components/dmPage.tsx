@@ -5,8 +5,8 @@ const LS_KEY_JWT = "jwt";
 const LS_KEY_GUEST = "guestId";
 
 type DmMessage = {
-  PK: string;           
-  SK: string;           
+  PK: string;
+  SK: string;
   content: string;
   senderId: string;
   receiverId: string;
@@ -43,7 +43,6 @@ export default function DmPage() {
   //  registrerad user eller gästanvändare
   const myId = userId ?? `GUEST#${ensureGuestId()}`;
 
-  
   const [allMessages, setAllMessages] = useState<DmMessage[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -86,7 +85,7 @@ export default function DmPage() {
       )
       .sort((a, b) => String(a.SK).localeCompare(String(b.SK)));
   }, [allMessages, myId, otherId]);
- // hämtar meddelanden när man kommer in i chatten/öppnar fönstret
+  // hämtar meddelanden när man kommer in i chatten/öppnar fönstret
   useEffect(() => {
     loadMessages();
     const onFocus = () => loadMessages();
@@ -94,25 +93,28 @@ export default function DmPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadMessages]);
 
-  // Skicka meddelande 
+  // Skicka meddelande
   async function handleSend() {
     if (!otherId) return;
     const trimmed = content.trim();
     if (!trimmed) return;
 
     try {
-      
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (jwt) headers.Authorization = `Bearer ${jwt}`; 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (jwt) headers.Authorization = `Bearer ${jwt}`;
 
-      
       type BodyWithJwt = { content: string; receiverId: string };
       type BodyGuest = BodyWithJwt & { guestId: string };
 
       const base: BodyWithJwt = { content: trimmed, receiverId: otherId };
       const body: BodyWithJwt | BodyGuest = jwt
         ? base
-        : { ...base, guestId: localStorage.getItem(LS_KEY_GUEST) ?? ensureGuestId() };
+        : {
+            ...base,
+            guestId: localStorage.getItem(LS_KEY_GUEST) ?? ensureGuestId(),
+          };
 
       const res = await fetch("/api/messages", {
         method: "POST",
@@ -135,7 +137,7 @@ export default function DmPage() {
 
   return (
     <section>
-         <button onClick={() => navigate("/frontPage")}>⬅ Tillbaka</button>
+      <button onClick={() => navigate("/frontPage")}>⬅ Tillbaka</button>
       <h2>Direktmeddelanden</h2>
       {loading && <p>Laddar…</p>}
       {error && !loading && <p>{error}</p>}
@@ -145,7 +147,8 @@ export default function DmPage() {
           <ul>
             {convo.map((m) => (
               <li key={m.SK}>
-                <strong>{m.senderId === myId ? "Du" : "Hen"}:</strong> {m.content}
+                <strong>{m.senderId === myId ? "Du" : "Hen"}:</strong>{" "}
+                {m.content}
               </li>
             ))}
             {convo.length === 0 && <li>Inga meddelanden ännu.</li>}
@@ -158,11 +161,12 @@ export default function DmPage() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Skriv ett meddelande…"
             />
-            <button type="button" onClick={handleSend}>Skicka</button>
+            <button type="button" onClick={handleSend}>
+              Skicka
+            </button>
           </div>
         </>
       )}
     </section>
   );
 }
-

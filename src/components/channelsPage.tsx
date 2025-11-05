@@ -18,8 +18,6 @@ type CreateChannelForm = {
   description: string;
 };
 
-
-
 const LS_KEY_JWT = "jwt";
 
 export default function ChannelsPage() {
@@ -27,14 +25,15 @@ export default function ChannelsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [creating, setCreating] = useState<boolean>(false);
-  const [form, setForm] = useState<CreateChannelForm>({ name: "", description: "" });
+  const [form, setForm] = useState<CreateChannelForm>({
+    name: "",
+    description: "",
+  });
 
   const navigate = useNavigate();
   const jwt = localStorage.getItem(LS_KEY_JWT);
   const isLoggedIn = Boolean(jwt);
 
-
-  
   //  loadChannels hämtar kanal-listan från API:t, sätter loading/error och uppdaterar state,  useCallback ser till att funktionen behåller samma referens mellan renders
 
   const loadChannels = useCallback(async (): Promise<void> => {
@@ -43,7 +42,9 @@ export default function ChannelsPage() {
     try {
       const res: Response = await fetch("/api/channels");
       if (!res.ok) {
-        const body: { message?: string } | null = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res
+          .json()
+          .catch(() => null);
         setError(body?.message ?? "Kunde inte hämta kanaler");
         setChannels([]);
         return;
@@ -62,14 +63,15 @@ export default function ChannelsPage() {
     }
   }, []);
 
-
   //  useEffect körs vid mount, när loadChannels-referensen ändras.Hämtar kanaler direkt (void loadChannels()).
   // Lägger till en focus på window som laddar om listan varje gång
   //cleanup tas lyssnaren bort för att undvika dubbla anrop.
 
   useEffect(() => {
-    void loadChannels(); 
-    const onFocus = (): void => { void loadChannels(); }; 
+    void loadChannels();
+    const onFocus = (): void => {
+      void loadChannels();
+    };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [loadChannels]);
@@ -86,13 +88,11 @@ export default function ChannelsPage() {
       return;
     }
 
-
-   
     //  setCreating(true) signalerar att skapandet pågår.
-   
+
     setCreating(true);
     try {
-       const res: Response = await fetch("/api/channels", {
+      const res: Response = await fetch("/api/channels", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,14 +102,16 @@ export default function ChannelsPage() {
       });
 
       if (!res.ok) {
-        const body: { message?: string } | null = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res
+          .json()
+          .catch(() => null);
         setError(body?.message ?? "Kunde inte skapa kanal.");
         return;
       }
 
       await res.json();
       setForm({ name: "", description: "" });
-      void loadChannels(); 
+      void loadChannels();
     } catch {
       setError("Nätverksfel. Försök igen.");
     } finally {
@@ -127,7 +129,6 @@ export default function ChannelsPage() {
         </button>
       </div>
 
-     
       <div>
         <h3>Skapa ny kanal</h3>
         <div>
@@ -162,46 +163,44 @@ export default function ChannelsPage() {
         </button>
       </div>
 
-    
       {loading && <p>Laddar kanaler…</p>}
       {error && !loading && <p role="alert">{error}</p>}
 
-     
       {!loading && !error && (
         <ul>
-  {channels.map((c) => {
-    const isLocked = c.access === "locked";
-    const isLoggedIn = Boolean(localStorage.getItem("jwt"));
+          {channels.map((c) => {
+            const isLocked = c.access === "locked";
+            const isLoggedIn = Boolean(localStorage.getItem("jwt"));
 
-    const disabled = isLocked && !isLoggedIn;
+            const disabled = isLocked && !isLoggedIn;
 
-    return (
-      <li key={c.channelId}>
-        {disabled ? (
-          <button
-            type="button"
-            disabled
-            title="Logga in för att gå in i låst kanal"
-            // style={{
-            //   opacity: 0.5,
-            //   cursor: "not-allowed",
-            //   background: "none",
-            //   border: "none",
-            //   color: "inherit",
-            // }}
-          >
-            {c.channelName} 
-          </button>
-        ) : (
-          <Link to={`/channels/${c.channelId}`}>
-            {c.channelName} {isLocked}
-          </Link>
-        )}
-      </li>
-    );
-  })}
-  {channels.length === 0 && <li>Inga kanaler ännu.</li>}
-</ul>
+            return (
+              <li key={c.channelId}>
+                {disabled ? (
+                  <button
+                    type="button"
+                    disabled
+                    title="Logga in för att gå in i låst kanal"
+                    // style={{
+                    //   opacity: 0.5,
+                    //   cursor: "not-allowed",
+                    //   background: "none",
+                    //   border: "none",
+                    //   color: "inherit",
+                    // }}
+                  >
+                    {c.channelName}
+                  </button>
+                ) : (
+                  <Link to={`/channels/${c.channelId}`}>
+                    {c.channelName} {isLocked}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+          {channels.length === 0 && <li>Inga kanaler ännu.</li>}
+        </ul>
       )}
     </section>
   );

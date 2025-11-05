@@ -15,15 +15,15 @@ import ChannelChat from "./components/ChannelChat";
 const router = createHashRouter([
   {
     path: "/",
-    Component: App,     
+    Component: App,
     children: [
-      { index: true, Component: Login },          
-      { path: "login", Component: Login },        
+      { index: true, Component: Login },
+      { path: "login", Component: Login },
       { path: "frontPage", Component: FrontPage },
       { path: "register", Component: Register },
       { path: "dm/:userId", Component: dmPage },
-      {path: "channels", Component: channelsPage},
-      { path: "channels/:channelId", Component: ChannelChat }
+      { path: "channels", Component: channelsPage },
+      { path: "channels/:channelId", Component: ChannelChat },
     ],
   },
 ]);
@@ -33,4 +33,3 @@ createRoot(document.getElementById("root")!).render(
     <RouterProvider router={router} />
   </StrictMode>
 );
-

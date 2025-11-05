@@ -20,7 +20,10 @@ interface LoginSuccessResponse {
 }
 
 export default function Login() {
-  const [formData, setFormData] = useState<FormData>({ username: "", password: "" });
+  const [formData, setFormData] = useState<FormData>({
+    username: "",
+    password: "",
+  });
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
 
@@ -73,20 +76,28 @@ export default function Login() {
           type="text"
           value={formData.username}
           autoComplete="username"
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, username: e.target.value })
+          }
         />
-      
+
         <label htmlFor="password">Lösenord</label>
         <input
           id="password"
           type="password"
           value={formData.password}
           autoComplete="current-password"
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, password: e.target.value })
+          }
         />
       </div>
 
-      {error && <p className="login-error" role="alert">{error}</p>}
+      {error && (
+        <p className="login-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="login-actions">
         <button type="button" onClick={handleSubmitLogin}>

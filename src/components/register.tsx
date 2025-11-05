@@ -39,7 +39,6 @@ export default function Register() {
     }
 
     try {
-     
       const response = await fetch("/api/register/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,7 +56,6 @@ export default function Register() {
 
       const data: RegisterSuccessResponse = await response.json();
 
-     
       if (data.token) {
         localStorage.setItem(LS_KEY, data.token);
       }
@@ -79,7 +77,9 @@ export default function Register() {
           id="username"
           type="text"
           value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, username: e.target.value })
+          }
         />
 
         <label htmlFor="password">Lösenord</label>
@@ -87,7 +87,9 @@ export default function Register() {
           id="password"
           type="password"
           value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, password: e.target.value })
+          }
         />
 
         <label htmlFor="confirmPassword">Upprepa lösenord</label>
@@ -101,7 +103,11 @@ export default function Register() {
         />
       </div>
 
-      {error && <p className="register-error" role="alert">{error}</p>}
+      {error && (
+        <p className="register-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="register-actions">
         <button type="button" onClick={handleSubmitRegister}>

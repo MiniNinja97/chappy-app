@@ -2,8 +2,6 @@ import { io, Socket } from "socket.io-client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
-
-
 const LS_KEY_JWT = "jwt"; // nyckeln som används i localStorage för att spara/hämta  JWT-token
 
 type ChannelMeta = {
@@ -19,11 +17,11 @@ type ChannelMeta = {
 };
 
 type ChannelMessageItem = {
-  PK: string;        
-  SK: string;         
+  PK: string;
+  SK: string;
   type: "MESSAGE";
   receiverId: string; // channelId
-  senderId: string;   // userId
+  senderId: string; // userId
   content: string;
 };
 
@@ -34,13 +32,13 @@ type ChannelGetResponse = {
 
 export default function ChannelChat() {
   const { channelId } = useParams<{ channelId: string }>();
-  const [messages, setMessages] = useState<ChannelMessageItem[]>([]); 
+  const [messages, setMessages] = useState<ChannelMessageItem[]>([]);
   // tom array betyder "inga meddelanden än"
-  const [input, setInput] = useState<string>(""); 
+  const [input, setInput] = useState<string>("");
   const [channel, setChannel] = useState<ChannelMeta | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const jwt = useMemo(() => localStorage.getItem(LS_KEY_JWT), []); 
+  const jwt = useMemo(() => localStorage.getItem(LS_KEY_JWT), []);
   // useMemo gör att vi bara läser localStorage en gång
 
   const socketRef = useRef<Socket | null>(null); // håller socket-anslutningen mellan renders
@@ -56,7 +54,7 @@ export default function ChannelChat() {
       setLoading(true);
 
       try {
-        // Försök först utan JWT 
+        // Försök först utan JWT
         let res = await fetch(`/api/channel-messages/${channelId}`);
 
         // Om servern säger 401 och vi har JWT — försök igen med token
@@ -67,7 +65,9 @@ export default function ChannelChat() {
         }
 
         if (!res.ok) {
-          const body: { message?: string } | null = await res.json().catch(() => null);
+          const body: { message?: string } | null = await res
+            .json()
+            .catch(() => null);
           throw new Error(body?.message ?? "Kunde inte hämta chatmeddelanden");
         }
 
@@ -75,7 +75,9 @@ export default function ChannelChat() {
         if (!active) return;
 
         setChannel(data.channel);
-        const sorted = [...data.messages].sort((a, b) => a.SK.localeCompare(b.SK)); 
+        const sorted = [...data.messages].sort((a, b) =>
+          a.SK.localeCompare(b.SK)
+        );
         setMessages(sorted);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Ett fel har inträffat");
@@ -95,13 +97,13 @@ export default function ChannelChat() {
   useEffect(() => {
     if (!channelId) return;
 
-    // skapa en ny socketinstans 
+    // skapa en ny socketinstans
     // Anslut mot samma origin
     const s: Socket = io("/", {
       withCredentials: true,
       // path är default den skrivs ut för tydlighet
       path: "/socket.io",
-      
+
       transports: ["websocket", "polling"],
     });
     socketRef.current = s;
@@ -111,8 +113,11 @@ export default function ChannelChat() {
     };
 
     //  hanterare för inkommande kanalmeddelanden med socket
-    //  Lägger bara till meddelandet om det gäller nuvarande kanal 
-    const onChannelMessage = (payload: { channelId: string; msg: ChannelMessageItem }) => {
+    //  Lägger bara till meddelandet om det gäller nuvarande kanal
+    const onChannelMessage = (payload: {
+      channelId: string;
+      msg: ChannelMessageItem;
+    }) => {
       if (payload.channelId === channelId) {
         setMessages((prev) => {
           //  prev är tidigare meddelanden, returnerar ny lista med det nya på slutet
@@ -130,9 +135,9 @@ export default function ChannelChat() {
     s.on("channel:message", onChannelMessage);
 
     return () => {
-      s.emit("channel:leave", { channelId });    // tala om för servern att vi lämnar kanalen
+      s.emit("channel:leave", { channelId }); // tala om för servern att vi lämnar kanalen
       s.off("channel:message", onChannelMessage); // avregistrera användare för att undvika dubbletter
-      s.off("connect", onConnect);                // avregistrera connect-handler
+      s.off("connect", onConnect); // avregistrera connect-handler
       s.disconnect(); // stäng anslutningen när komponenten tas bort
       socketRef.current = null;
     };
@@ -156,7 +161,9 @@ export default function ChannelChat() {
     }
 
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
 
       // Skicka JWT endast om det finns och kanalen är låst
       if (jwt && isLocked) {
@@ -170,11 +177,13 @@ export default function ChannelChat() {
       });
 
       if (!res.ok) {
-        const body: { message?: string } | null = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res
+          .json()
+          .catch(() => null);
         throw new Error(body?.message ?? "Kunde inte skicka meddelandet");
       }
 
-      const nowISO = new Date().toISOString(); // skapar tidsstämpel i ISO 
+      const nowISO = new Date().toISOString(); // skapar tidsstämpel i ISO
       const newMsg: ChannelMessageItem = {
         PK: `CHANNELMSG#${channelId}`,
         SK: `Timestamp#${nowISO}`,
@@ -192,7 +201,7 @@ export default function ChannelChat() {
         return exists ? prev : [...prev, newMsg];
       });
 
-      socketRef.current?.emit("channel:message", { channelId, msg: newMsg }); //skickar ett event till servern med namnet "channel:message". "emit" = sänd ett namngivet event med data 
+      socketRef.current?.emit("channel:message", { channelId, msg: newMsg }); //skickar ett event till servern med namnet "channel:message". "emit" = sänd ett namngivet event med data
       setInput("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ett fel inträffade");
@@ -206,8 +215,7 @@ export default function ChannelChat() {
   return (
     <div className="chat-container">
       <h1>
-        Chat – {channel.channelName}{" "}
-        {channel.access === "locked"}
+        Chat – {channel.channelName} {channel.access === "locked"}
       </h1>
 
       <ul className="chat-messages">
@@ -241,4 +249,3 @@ export default function ChannelChat() {
     </div>
   );
 }
-
