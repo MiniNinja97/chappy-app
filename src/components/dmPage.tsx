@@ -54,7 +54,7 @@ export default function DmPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:1337/api/messages");
+      const res = await fetch("/api/messages");
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         setError(body?.message ?? "Kunde inte hämta meddelanden");
@@ -114,7 +114,7 @@ export default function DmPage() {
         ? base
         : { ...base, guestId: localStorage.getItem(LS_KEY_GUEST) ?? ensureGuestId() };
 
-      const res = await fetch("http://localhost:1337/api/messages", {
+      const res = await fetch("/api/messages", {
         method: "POST",
         headers,
         body: JSON.stringify(body),

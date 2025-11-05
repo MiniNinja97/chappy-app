@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 
-const API_ORIGIN = "http://localhost:1337";
+
 const LS_KEY_JWT = "jwt"; // nyckeln som används i localStorage för att spara/hämta  JWT-token
 
 type ChannelMeta = {
@@ -35,7 +35,7 @@ type ChannelGetResponse = {
 export default function ChannelChat() {
   const { channelId } = useParams<{ channelId: string }>();
   const [messages, setMessages] = useState<ChannelMessageItem[]>([]); 
-  // tom array betyder "inga meddelanden än", slipper null-checks
+  // tom array betyder "inga meddelanden än"
   const [input, setInput] = useState<string>(""); 
   const [channel, setChannel] = useState<ChannelMeta | null>(null);
   const [error, setError] = useState<string>("");
@@ -57,11 +57,11 @@ export default function ChannelChat() {
 
       try {
         // Försök först utan JWT 
-        let res = await fetch(`${API_ORIGIN}/api/channel-messages/${channelId}`);
+        let res = await fetch(`/api/channel-messages/${channelId}`);
 
         // Om servern säger 401 och vi har JWT — försök igen med token
         if (res.status === 401 && jwt) {
-          res = await fetch(`${API_ORIGIN}/api/channel-messages/${channelId}`, {
+          res = await fetch(`/api/channel-messages/${channelId}`, {
             headers: { Authorization: `Bearer ${jwt}` },
           });
         }
@@ -96,8 +96,13 @@ export default function ChannelChat() {
     if (!channelId) return;
 
     // skapa en ny socketinstans 
-    const s: Socket = io(API_ORIGIN, {
+    // Anslut mot samma origin
+    const s: Socket = io("/", {
       withCredentials: true,
+      // path är default den skrivs ut för tydlighet
+      path: "/socket.io",
+      
+      transports: ["websocket", "polling"],
     });
     socketRef.current = s;
 
@@ -120,7 +125,7 @@ export default function ChannelChat() {
     };
 
     // nedan registreras event/användare på socketen och i cleanup tas de bort
-    //       connect - när socketen ansluter, channel:message - när servern skicar nytt meddelande
+    // connect när socketen ansluter, channel:message - när servern skicar nytt meddelande
     s.on("connect", onConnect);
     s.on("channel:message", onChannelMessage);
 
@@ -158,7 +163,7 @@ export default function ChannelChat() {
         headers.Authorization = `Bearer ${jwt}`;
       }
 
-      const res = await fetch(`${API_ORIGIN}/api/channel-messages`, {
+      const res = await fetch(`/api/channel-messages`, {
         method: "POST",
         headers,
         body: JSON.stringify({ channelId, content: input.trim() }),

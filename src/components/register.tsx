@@ -40,7 +40,7 @@ export default function Register() {
 
     try {
      
-      const response = await fetch("http://localhost:1337/api/register/register", {
+      const response = await fetch("/api/register/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

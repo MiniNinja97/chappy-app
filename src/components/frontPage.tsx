@@ -38,7 +38,7 @@ export default function FrontPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:1337/api/users");
+      const res = await fetch("/api/users");
       if(!res.ok) {
         const body = await res.json().catch(() => null); 
         setError(body?.message ?? "Kunde inte hämta användare");

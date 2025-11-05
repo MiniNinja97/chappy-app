@@ -35,13 +35,13 @@ export default function ChannelsPage() {
 
 
   
-  //  loadChannels hämtar kanal-listan från API:t, sätter loading/error och uppdaterar state,  useCallback ser till att funktionen behåller *samma referens* mellan renders
+  //  loadChannels hämtar kanal-listan från API:t, sätter loading/error och uppdaterar state,  useCallback ser till att funktionen behåller samma referens mellan renders
 
   const loadChannels = useCallback(async (): Promise<void> => {
     setError("");
     setLoading(true);
     try {
-      const res: Response = await fetch("http://localhost:1337/api/channels");
+      const res: Response = await fetch("/api/channels");
       if (!res.ok) {
         const body: { message?: string } | null = await res.json().catch(() => null);
         setError(body?.message ?? "Kunde inte hämta kanaler");
@@ -92,7 +92,7 @@ export default function ChannelsPage() {
    
     setCreating(true);
     try {
-      const res: Response = await fetch("http://localhost:1337/api/channels", {
+       const res: Response = await fetch("/api/channels", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,19 +182,19 @@ export default function ChannelsPage() {
             type="button"
             disabled
             title="Logga in för att gå in i låst kanal"
-            style={{
-              opacity: 0.5,
-              cursor: "not-allowed",
-              background: "none",
-              border: "none",
-              color: "inherit",
-            }}
+            // style={{
+            //   opacity: 0.5,
+            //   cursor: "not-allowed",
+            //   background: "none",
+            //   border: "none",
+            //   color: "inherit",
+            // }}
           >
-            {c.channelName} 🔒
+            {c.channelName} 
           </button>
         ) : (
           <Link to={`/channels/${c.channelId}`}>
-            {c.channelName} {isLocked && "🔒"}
+            {c.channelName} {isLocked}
           </Link>
         )}
       </li>
