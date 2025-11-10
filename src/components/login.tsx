@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-// ✅ Nytt: importera Zustand-store
 import { useAuthStore } from "./zustandStorage";
 
 interface FormData {
@@ -28,7 +26,7 @@ export default function Login() {
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
 
-  // ✅ Hämta Zustand-funktionerna
+  //  Hämta Zustand-funktionerna
   const setJwt = useAuthStore((s) => s.setJwt);
   const clearJwt = useAuthStore((s) => s.clearJwt);
   const clearGuestId = useAuthStore((s) => s.clearGuestId);
@@ -57,13 +55,13 @@ export default function Login() {
 
       const data: LoginSuccessResponse = await response.json();
 
-      // ✅ Spara token i Zustand (inte localStorage)
+      // Spara token i Zustand 
       setJwt(data.token);
 
-      // Ta bort ev. tidigare gäst-ID i Zustand
+      
       clearGuestId();
 
-      // Gå till startsidan
+      
       navigate("/frontPage");
     } catch {
       setError("Nätverksfel. Försök igen.");
@@ -71,7 +69,7 @@ export default function Login() {
   }
 
   function handleGuest() {
-    // ✅ Gästläge: rensa JWT och skapa nytt gäst-ID
+    
     clearJwt();
     setGuestId(crypto.randomUUID());
     navigate("/frontPage");

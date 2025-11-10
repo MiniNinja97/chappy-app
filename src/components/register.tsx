@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// ✅ Läs/skriv JWT via Zustand (in-memory)
 import { useAuthStore } from "./zustandStorage";
 
 interface FormData {
@@ -59,8 +57,8 @@ export default function Register() {
 
       const data: RegisterSuccessResponse = await response.json();
 
-      // Om backend skickar med en token vid registrering kan vi lägga den i Zustand (in-memory).
-      // Du navigerar ändå till /login efteråt – behåll detta beteende om du vill kräva inloggning.
+      // Om backend skickar med en token vid registrering kan vi lägga den i Zustand 
+     
       if (data.token) {
         setJwt(data.token);
       }

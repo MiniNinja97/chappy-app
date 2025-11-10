@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
-// ✅ Nytt: läs JWT + guestId från Zustand (in-memory)
 import { useAuthStore, selectJwt } from "./zustandStorage";
 
-// Om du även har en separat selector för guestId i din store kan du använda:
-// import { useAuthStore, selectJwt, selectGuestId } from "./zuztandstorage";
+
 
 type DmMessage = {
   PK: string;
@@ -32,11 +29,10 @@ export default function DmPage() {
   const { userId: otherId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
 
-  // 🔁 Ersätter localStorage: läs JWT via Zustand (ingen persist)
+  // Ersätter localStorage
   const jwt = useAuthStore(selectJwt);
 
-  // --- Gäst-ID: ersätter localStorage("guestId") med Zustand-inmemory ---
-  // Antagande: din store har fält: guestId: string | null, setGuestId: (id: string) => void
+
   const guestId = useAuthStore((s) => s.guestId as string | null);
   const setGuestId = useAuthStore((s) => s.setGuestId as (id: string) => void);
 
@@ -53,7 +49,7 @@ export default function DmPage() {
     }
   }, [guestId, setGuestId]);
 
-  // Effektivt gäst-ID att använda direkt i render/beräkningar innan Zustand hunnit sätta state
+  
   const effectiveGuestId: string | null = guestId ?? pendingGuestIdRef.current;
 
   // UserId från JWT om inloggad
@@ -92,7 +88,7 @@ export default function DmPage() {
   // useMemo minns ett värde, det minskar onödig filtrering/sortering
   //  convo är den aktiva tråden mellan myId/jag som skickar meddelandet och otherId som tar emot meddelandet
   //  Returnerar tom lista om vi saknar otherId.
-  //  Sorterar resultaten på SK med localeCompare, useMemo körs om när allMessages/myId/otherId ändras
+  
   const convo = useMemo<DmMessage[]>(() => {
     if (!otherId) return [];
     return allMessages
@@ -129,7 +125,7 @@ export default function DmPage() {
 
       const base: BodyWithJwt = { content: trimmed, receiverId: otherId };
 
-      // Om vi inte är inloggade måste vi skicka med guestId (nu från Zustand/ref, inte localStorage)
+      // Om vi inte är inloggade måste vi skicka med guestId från Zustand
       const activeGuestId = effectiveGuestId ?? crypto.randomUUID(); // fallback om något skulle saknas
       const body: BodyWithJwt | BodyGuest = jwt ? base : { ...base, guestId: activeGuestId };
 

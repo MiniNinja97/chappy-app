@@ -193,7 +193,7 @@ export default function ChannelChat() {
         content: input.trim(),
       };
 
-      // uppdatering – lägg till meddelandet direkt på skärmen
+      // lägg till meddelandet direkt på skärmen
       setMessages((prev) => {
         const exists = prev.some(
           (m) => m.SK === newMsg.SK && m.content === newMsg.content
@@ -241,7 +241,7 @@ export default function ChannelChat() {
         <button
           type="submit"
           className="chat-button"
-          disabled={!canWrite || !input.trim()} // disable knappen också
+          disabled={!canWrite || !input.trim()} // disable knappen 
         >
           Skicka
         </button>

@@ -198,7 +198,7 @@ export default function ChannelsPage() {
         <ul>
           {channels.map((c) => {
             const isLocked = c.access === "locked";
-            // använd Zustand-status istället för localStorage
+            
             const disabled = isLocked && !isLoggedIn;
 
             return (

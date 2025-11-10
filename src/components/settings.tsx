@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-// ✅ Importera Zustand för JWT-hantering
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
 
 type ChannelItem = {
@@ -25,12 +23,12 @@ export default function SettingsPage() {
 
   const navigate = useNavigate();
 
-  // ✅ Läs JWT och inloggningsstatus från Zustand
+  // JWT och inloggningsstatus från Zustand
   const jwt = useAuthStore(selectJwt);
   const isLoggedIn = useAuthStore(selectIsLoggedIn);
   const clearJwt = useAuthStore((s) => s.clearJwt);
 
-  // 🔒 Skydda sidan i UI: om inte inloggad → tillbaka till frontPage
+  // 
   useEffect(() => {
     if (!isLoggedIn) navigate("/frontPage", { replace: true });
   }, [isLoggedIn, navigate]);
@@ -47,7 +45,7 @@ export default function SettingsPage() {
       });
 
       if (res.status === 401) {
-        // token saknas/ogiltig → logga ut lokalt och skicka hem
+        // token saknas/ogiltig → logga ut 
         clearJwt();
         navigate("/frontPage", { replace: true });
         return;
@@ -78,7 +76,7 @@ export default function SettingsPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadMine, isLoggedIn]);
 
-  // Ta bort kanal (endast skaparen – backend verifierar)
+  // Ta bort kanal 
   async function handleDeleteChannel(channelId: string) {
     if (!isLoggedIn || !jwt) return;
 
@@ -167,7 +165,7 @@ export default function SettingsPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleDeleteChannel(c.channelId)} // channelName togs bort – den användes aldrig
+                  onClick={() => handleDeleteChannel(c.channelId)} 
                   disabled={deletingId === c.channelId}
                 >
                   {deletingId === c.channelId ? "Tar bort…" : "Ta bort"}

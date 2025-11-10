@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-// ✅ Nytt: läs JWT från Zustand istället för localStorage
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
 
 export interface User {
@@ -27,7 +25,7 @@ export default function FrontPage() {
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // 🔁 Ersätter localStorage: läs JWT via Zustand (ingen persist)
+  // Ersätter localStorage
   const jwt = useAuthStore(selectJwt);
   const isLoggedIn = useAuthStore(selectIsLoggedIn);
 
