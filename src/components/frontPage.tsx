@@ -1,14 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+// ✅ Nytt: läs JWT från Zustand istället för localStorage
+import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
+
 export interface User {
   userId: string;
   username: string;
   accessLevel: string;
   type: "USER";
 }
-
-const LS_KEY = "jwt";
 
 // liten hjälpfunktion för att plocka userId från JWT
 function getUserIdFromJWT(token: string | null): string | null {
@@ -26,7 +27,13 @@ export default function FrontPage() {
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  const me = getUserIdFromJWT(localStorage.getItem(LS_KEY));
+  // 🔁 Ersätter localStorage: läs JWT via Zustand (ingen persist)
+  const jwt = useAuthStore(selectJwt);
+  const isLoggedIn = useAuthStore(selectIsLoggedIn);
+
+  //  avkoda userId från JWT, om användaren är inloggad
+  const me = getUserIdFromJWT(jwt);
+
   const navigate = useNavigate();
 
   const loadUsers = useCallback(async () => {
@@ -65,8 +72,6 @@ export default function FrontPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadUsers]);
 
-  const isLoggedIn = Boolean(localStorage.getItem(LS_KEY));
-
   return (
     <section>
       <h1>Välkommen till Chappy App</h1>
@@ -83,13 +88,6 @@ export default function FrontPage() {
                   type="button"
                   disabled
                   title="Logga in för att skicka DM"
-                  style={{
-                    opacity: 0.5,
-                    cursor: "not-allowed",
-                    background: "none",
-                    border: "none",
-                    color: "inherit",
-                  }}
                 >
                   {u.username}
                 </button>
@@ -99,9 +97,22 @@ export default function FrontPage() {
           {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
         </ul>
       )}
-      <button type="button" onClick={() => navigate("/channels")}>
-        Visa kanaler
-      </button>
+
+      <div>
+        <button type="button" onClick={() => navigate("/channels")}>
+          Visa kanaler
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/settings")}
+          disabled={!isLoggedIn}
+          title={!isLoggedIn ? "Logga in för att se dina kanaler" : ""}
+        >
+          Inställningar
+        </button>
+      </div>
     </section>
   );
 }
+

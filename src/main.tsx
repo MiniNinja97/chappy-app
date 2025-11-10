@@ -11,6 +11,7 @@ import Register from "./components/register";
 import dmPage from "./components/dmPage";
 import channelsPage from "./components/channelsPage";
 import ChannelChat from "./components/ChannelChat";
+import Settings from "./components/settings";
 
 const router = createHashRouter([
   {
@@ -24,6 +25,7 @@ const router = createHashRouter([
       { path: "dm/:userId", Component: dmPage },
       { path: "channels", Component: channelsPage },
       { path: "channels/:channelId", Component: ChannelChat },
+      { path: "settings", Component: Settings },
     ],
   },
 ]);

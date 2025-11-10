@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-const LS_KEY = "jwt";
+// ✅ Nytt: importera Zustand-store
+import { useAuthStore } from "./zustandStorage";
 
 interface FormData {
   username: string;
@@ -27,6 +28,12 @@ export default function Login() {
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
 
+  // ✅ Hämta Zustand-funktionerna
+  const setJwt = useAuthStore((s) => s.setJwt);
+  const clearJwt = useAuthStore((s) => s.clearJwt);
+  const clearGuestId = useAuthStore((s) => s.clearGuestId);
+  const setGuestId = useAuthStore((s) => s.setGuestId);
+
   async function handleSubmitLogin() {
     setError("");
 
@@ -49,8 +56,12 @@ export default function Login() {
       }
 
       const data: LoginSuccessResponse = await response.json();
-      localStorage.setItem(LS_KEY, data.token);
-      localStorage.removeItem("guest");
+
+      // ✅ Spara token i Zustand (inte localStorage)
+      setJwt(data.token);
+
+      // Ta bort ev. tidigare gäst-ID i Zustand
+      clearGuestId();
 
       // Gå till startsidan
       navigate("/frontPage");
@@ -60,8 +71,9 @@ export default function Login() {
   }
 
   function handleGuest() {
-    localStorage.removeItem(LS_KEY);
-    localStorage.setItem("guest", "true");
+    // ✅ Gästläge: rensa JWT och skapa nytt gäst-ID
+    clearJwt();
+    setGuestId(crypto.randomUUID());
     navigate("/frontPage");
   }
 
@@ -111,3 +123,4 @@ export default function Login() {
     </div>
   );
 }
+

@@ -1,14 +1,49 @@
 import express, { type Router, type Request, type Response } from "express";
 import { db, tableName } from "../data/dynamoDb.js";
-import { GetCommand, PutCommand, DeleteCommand, ScanCommand, type ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
+import {
+  GetCommand,
+  PutCommand,
+  DeleteCommand,
+  ScanCommand,
+  type ScanCommandOutput,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { authMiddleware, validateBody } from "../data/middleware.js";
 import { channelSchema } from "../data/validation.js";
 import { randomUUID } from "crypto";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { z } from "zod";
 
 const router: Router = express.Router();
 
-// Hämta alla kanaler
+
+   //Zod-schema för hur en kanalpost ser ut i databasen
+
+export const channelMetaSchema = z.object({
+  PK: z.string().startsWith("CHANNEL#"),
+  SK: z.literal("CHANNELMETA"),
+  type: z.literal("CHANNEL"),
+  channelId: z.string(),
+  channelName: z.string(),
+  access: z.union([z.literal("public"), z.literal("locked")]),
+  creatorId: z.string(),
+  creatorPK: z.string().startsWith("USER#"),
+  description: z.string().nullable().optional(),
+});
+
+export type ChannelMeta = z.infer<typeof channelMetaSchema>;
+
+
+   //Hjälpfunktion för sortering 
+ 
+function sortChannels(items: ChannelMeta[]): ChannelMeta[] {
+  return [...items].sort((a, b) =>
+    String(a.channelName ?? a.PK).localeCompare(String(b.channelName ?? b.PK))
+  );
+}
+
+
+   //Hämta alla kanaler
+   
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const scan = new ScanCommand({
@@ -22,22 +57,59 @@ router.get("/", async (_req: Request, res: Response) => {
 
     const result: ScanCommandOutput = await db.send(scan);
 
-    if (!result.Items || result.Items.length === 0) {
-      return res.status(404).send({ message: "Inga kanaler hittades" });
-    }
+    // Validerar alla poster mot Zod-schema (slipper any)
+    const items = (result.Items ?? []).map((i) => channelMetaSchema.parse(i));
 
-    const items = [...result.Items].sort((a, b) =>
-      String(a.channelName ?? a.PK).localeCompare(String(b.channelName ?? b.PK))
-    );
-
-    return res.status(200).send(items);
+    // Sorterar som tidigare
+    return res.status(200).send(sortChannels(items));
   } catch (err) {
     console.error("Fel vid hämtning av kanaler:", err);
-    return res.status(500).send({ message: "Internt serverfel vid hämtning av kanaler" });
+    const msg = err instanceof Error ? err.message : String(err);
+    return res
+      .status(500)
+      .send({ message: "Internt serverfel vid hämtning av kanaler", detail: msg });
   }
 });
 
-// Hämta en kanal och alla dess meddelanden
+//Hämta alla kanaler skapade av inloggad användare
+  
+router.get("/mine", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    if (typeof req.userId !== "string") {
+      return res.status(401).send({ message: "Ingen giltlig token" });
+    }
+
+    
+    const scan = new ScanCommand({
+      TableName: tableName,
+      FilterExpression:
+        "begins_with(PK, :p) AND SK = :meta AND creatorId = :uid",
+      ExpressionAttributeValues: {
+        ":p": "CHANNEL#",
+        ":meta": "CHANNELMETA",
+        ":uid": req.userId,
+      },
+    });
+
+    const result = await db.send(scan);
+    // Validerar alla poster mot Zod-schema
+    const items = (result.Items ?? []).map((i) => channelMetaSchema.parse(i));
+
+    const sorted = sortChannels(items);
+    return res.status(200).send(sorted);
+  } catch (err) {
+    console.error("Fel vid hämtning av mina kanaler:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).send({
+      message: "Internt serverfel vid hämtning av dina kanaler",
+      detail: msg,
+    });
+  }
+});
+
+
+   //Hämta en kanal och alla dess meddelanden
+   
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -54,6 +126,9 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).send({ message: "Kanalen hittades inte" });
     }
 
+    // Validerar posten med Zod
+    const meta = channelMetaSchema.parse(metaResult.Item);
+
     // Hämta alla meddelanden i kanalen
     const query = new QueryCommand({
       TableName: tableName,
@@ -68,16 +143,19 @@ router.get("/:id", async (req: Request, res: Response) => {
     const messages = messagesResult.Items ?? [];
 
     return res.status(200).send({
-      channel: metaResult.Item,
+      channel: meta,
       messages,
     });
   } catch (err) {
     console.error("Fel vid hämtning av kanal och meddelanden:", err);
-    return res.status(500).send({ message: "Internt serverfel" });
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).send({ message: "Internt serverfel", detail: msg });
   }
 });
 
-// Skapa ny kanal
+
+   //Skapa ny kanal
+
 router.post(
   "/",
   authMiddleware,
@@ -97,7 +175,7 @@ router.post(
       const creatorId = req.userId;
       const channelId = randomUUID();
 
-      const item = {
+      const item: ChannelMeta = {
         PK: `CHANNEL#${channelId}`,
         SK: "CHANNELMETA",
         type: "CHANNEL",
@@ -118,17 +196,27 @@ router.post(
       );
 
       return res.status(201).send({ message: "Kanal skapad", channel: item });
-    } catch (err: any) {
-      if (err?.name === "ConditionalCheckFailedException") {
+    } catch (err) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        (err as { name?: string }).name === "ConditionalCheckFailedException"
+      ) {
         return res.status(409).send({ message: "Kunde inte skapa en ny kanal" });
       }
       console.error("Fel vid kanal-skapande:", err);
-      return res.status(500).send({ message: "Internt serverfel när man skapar kanal" });
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).send({
+        message: "Internt serverfel när man skapar kanal",
+        detail: msg,
+      });
     }
   }
 );
 
-// Ta bort kanal (endast skaparen)
+
+   //Ta bort kanal (endast skaparen)
+  
 router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -145,9 +233,14 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).send({ message: "Kanalen hittades inte" });
     }
 
-    const creatorId = String(found.Item.creatorId ?? "");
+    // Validerar posten mot Zod
+    const meta = channelMetaSchema.parse(found.Item);
+
+    const creatorId = meta.creatorId;
     if (typeof req.userId !== "string" || creatorId !== req.userId) {
-      return res.status(403).send({ message: "Det finns inte behörighet att ta bort kanalen" });
+      return res
+        .status(403)
+        .send({ message: "Det finns inte behörighet att ta bort kanalen" });
     }
 
     await db.send(
@@ -159,13 +252,24 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
     );
 
     return res.status(200).send({ message: "Kanalen är borttagen" });
-  } catch (err: any) {
-    if (err?.name === "ConditionalCheckFailedException") {
+  } catch (err) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      (err as { name?: string }).name === "ConditionalCheckFailedException"
+    ) {
       return res.status(404).send({ message: "Kanalen fanns inte" });
     }
     console.error("Fel vid radering av kanal:", err);
-    return res.status(500).send({ message: "Internt serverfel vid radering av kanal" });
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).send({
+      message: "Internt serverfel vid radering av kanal",
+      detail: msg,
+    });
   }
 });
+
+
+   
 
 export default router;

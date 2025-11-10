@@ -1,8 +1,9 @@
 import { io, Socket } from "socket.io-client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useAuthStore, selectJwt } from "./zustandStorage";
 
-const LS_KEY_JWT = "jwt"; // nyckeln som används i localStorage för att spara/hämta  JWT-token
+
 
 type ChannelMeta = {
   PK: string;
@@ -38,8 +39,7 @@ export default function ChannelChat() {
   const [channel, setChannel] = useState<ChannelMeta | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const jwt = useMemo(() => localStorage.getItem(LS_KEY_JWT), []);
-  // useMemo gör att vi bara läser localStorage en gång
+  const jwt = useAuthStore(selectJwt);
 
   const socketRef = useRef<Socket | null>(null); // håller socket-anslutningen mellan renders
 

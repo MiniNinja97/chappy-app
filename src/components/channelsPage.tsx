@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+
+import {
+  useAuthStore,
+  selectJwt,
+  selectIsLoggedIn,
+} from "./zustandStorage";
+
 type ChannelItem = {
   PK: string;
   SK: "CHANNELMETA";
   type: "CHANNEL";
   channelId: string;
   channelName: string;
-  access: string; // "public"
+  access: "public" | "locked";
   creatorId: string;
   creatorPK: string;
   description?: string | null;
@@ -16,9 +23,10 @@ type ChannelItem = {
 type CreateChannelForm = {
   name: string;
   description: string;
+  access: "public" | "locked";
 };
 
-const LS_KEY_JWT = "jwt";
+// const LS_KEY_JWT = "jwt"; // (tidigare) nyckeln som används i localStorage för att spara/hämta JWT-token
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<ChannelItem[]>([]);
@@ -28,14 +36,16 @@ export default function ChannelsPage() {
   const [form, setForm] = useState<CreateChannelForm>({
     name: "",
     description: "",
+    access: "public",
   });
 
   const navigate = useNavigate();
-  const jwt = localStorage.getItem(LS_KEY_JWT);
-  const isLoggedIn = Boolean(jwt);
+
+ 
+  const jwt = useAuthStore(selectJwt);
+  const isLoggedIn = useAuthStore(selectIsLoggedIn);
 
   //  loadChannels hämtar kanal-listan från API:t, sätter loading/error och uppdaterar state,  useCallback ser till att funktionen behåller samma referens mellan renders
-
   const loadChannels = useCallback(async (): Promise<void> => {
     setError("");
     setLoading(true);
@@ -66,7 +76,6 @@ export default function ChannelsPage() {
   //  useEffect körs vid mount, när loadChannels-referensen ändras.Hämtar kanaler direkt (void loadChannels()).
   // Lägger till en focus på window som laddar om listan varje gång
   //cleanup tas lyssnaren bort för att undvika dubbla anrop.
-
   useEffect(() => {
     void loadChannels();
     const onFocus = (): void => {
@@ -89,7 +98,6 @@ export default function ChannelsPage() {
     }
 
     //  setCreating(true) signalerar att skapandet pågår.
-
     setCreating(true);
     try {
       const res: Response = await fetch("/api/channels", {
@@ -98,7 +106,7 @@ export default function ChannelsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${jwt}`,
         },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description, access: form.access }),
       });
 
       if (!res.ok) {
@@ -110,7 +118,7 @@ export default function ChannelsPage() {
       }
 
       await res.json();
-      setForm({ name: "", description: "" });
+      setForm({ name: "", description: "", access: "public" });
       void loadChannels();
     } catch {
       setError("Nätverksfel. Försök igen.");
@@ -131,6 +139,7 @@ export default function ChannelsPage() {
 
       <div>
         <h3>Skapa ny kanal</h3>
+
         <div>
           <label htmlFor="channel-name">Namn</label>
           <input
@@ -153,11 +162,30 @@ export default function ChannelsPage() {
           />
         </div>
 
+        <div style={{ marginTop: "0.5rem" }}>
+          <input
+            id="channel-access"
+            type="checkbox"
+            checked={form.access === "public"}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                access: e.target.checked ? "public" : "locked",
+              })
+            }
+            disabled={!isLoggedIn}
+          />
+          <label htmlFor="channel-access" style={{ marginLeft: "0.5rem" }}>
+            Öppen kanal (gäster kan se)
+          </label>
+        </div>
+
         <button
           type="button"
           onClick={handleCreateChannel}
           disabled={!isLoggedIn || creating}
           title={!isLoggedIn ? "Logga in för att skapa kanaler" : ""}
+          style={{ marginTop: "0.5rem" }}
         >
           {creating ? "Skapar…" : "Skapa kanal"}
         </button>
@@ -170,25 +198,13 @@ export default function ChannelsPage() {
         <ul>
           {channels.map((c) => {
             const isLocked = c.access === "locked";
-            const isLoggedIn = Boolean(localStorage.getItem("jwt"));
-
+            // använd Zustand-status istället för localStorage
             const disabled = isLocked && !isLoggedIn;
 
             return (
               <li key={c.channelId}>
                 {disabled ? (
-                  <button
-                    type="button"
-                    disabled
-                    title="Logga in för att gå in i låst kanal"
-                    // style={{
-                    //   opacity: 0.5,
-                    //   cursor: "not-allowed",
-                    //   background: "none",
-                    //   border: "none",
-                    //   color: "inherit",
-                    // }}
-                  >
+                  <button type="button" disabled title="Låst kanal">
                     {c.channelName}
                   </button>
                 ) : (

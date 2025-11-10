@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const LS_KEY = "jwt";
+// ✅ Läs/skriv JWT via Zustand (in-memory)
+import { useAuthStore } from "./zustandStorage";
 
 interface FormData {
   username: string;
@@ -23,6 +24,8 @@ export default function Register() {
   });
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
+
+  const setJwt = useAuthStore((s) => s.setJwt);
 
   async function handleSubmitRegister() {
     setError("");
@@ -56,8 +59,10 @@ export default function Register() {
 
       const data: RegisterSuccessResponse = await response.json();
 
+      // Om backend skickar med en token vid registrering kan vi lägga den i Zustand (in-memory).
+      // Du navigerar ändå till /login efteråt – behåll detta beteende om du vill kräva inloggning.
       if (data.token) {
-        localStorage.setItem(LS_KEY, data.token);
+        setJwt(data.token);
       }
 
       // Skicka användaren till login efter lyckad registrering

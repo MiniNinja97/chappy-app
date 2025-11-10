@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-const LS_KEY_JWT = "jwt";
-const LS_KEY_GUEST = "guestId";
+// ✅ Nytt: läs JWT + guestId från Zustand (in-memory)
+import { useAuthStore, selectJwt } from "./zustandStorage";
+
+// Om du även har en separat selector för guestId i din store kan du använda:
+// import { useAuthStore, selectJwt, selectGuestId } from "./zuztandstorage";
 
 type DmMessage = {
   PK: string;
@@ -24,24 +27,39 @@ function getJwtUserId(token: string | null): string | null {
   }
 }
 
-function ensureGuestId(): string {
-  let g = localStorage.getItem(LS_KEY_GUEST);
-  if (!g) {
-    g = crypto.randomUUID();
-    localStorage.setItem(LS_KEY_GUEST, g);
-  }
-  return g;
-}
-
 export default function DmPage() {
   // Parametern heter userId i route /dm/:userId
   const { userId: otherId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
 
-  const jwt = localStorage.getItem(LS_KEY_JWT);
+  // 🔁 Ersätter localStorage: läs JWT via Zustand (ingen persist)
+  const jwt = useAuthStore(selectJwt);
+
+  // --- Gäst-ID: ersätter localStorage("guestId") med Zustand-inmemory ---
+  // Antagande: din store har fält: guestId: string | null, setGuestId: (id: string) => void
+  const guestId = useAuthStore((s) => s.guestId as string | null);
+  const setGuestId = useAuthStore((s) => s.setGuestId as (id: string) => void);
+
+  // Vi vill säkerställa att gästen får ett stabilt ID under hela sessions-livscykeln,
+  // utan att skriva till localStorage. För att undvika "side-effects in render"
+  // genererar vi ett temporärt ID i en ref och synkar in det till Zustand i useEffect.
+  const pendingGuestIdRef = useRef<string | null>(null);
+  if (!guestId && !pendingGuestIdRef.current) {
+    pendingGuestIdRef.current = crypto.randomUUID();
+  }
+  useEffect(() => {
+    if (!guestId && pendingGuestIdRef.current) {
+      setGuestId(pendingGuestIdRef.current);
+    }
+  }, [guestId, setGuestId]);
+
+  // Effektivt gäst-ID att använda direkt i render/beräkningar innan Zustand hunnit sätta state
+  const effectiveGuestId: string | null = guestId ?? pendingGuestIdRef.current;
+
+  // UserId från JWT om inloggad
   const userId = getJwtUserId(jwt);
   //  registrerad user eller gästanvändare
-  const myId = userId ?? `GUEST#${ensureGuestId()}`;
+  const myId = userId ?? (effectiveGuestId ? `GUEST#${effectiveGuestId}` : "GUEST#");
 
   const [allMessages, setAllMessages] = useState<DmMessage[]>([]);
   const [error, setError] = useState<string>("");
@@ -55,7 +73,7 @@ export default function DmPage() {
     try {
       const res = await fetch("/api/messages");
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res.json().catch(() => null);
         setError(body?.message ?? "Kunde inte hämta meddelanden");
         setAllMessages([]);
         return;
@@ -85,6 +103,7 @@ export default function DmPage() {
       )
       .sort((a, b) => String(a.SK).localeCompare(String(b.SK)));
   }, [allMessages, myId, otherId]);
+
   // hämtar meddelanden när man kommer in i chatten/öppnar fönstret
   useEffect(() => {
     loadMessages();
@@ -109,12 +128,10 @@ export default function DmPage() {
       type BodyGuest = BodyWithJwt & { guestId: string };
 
       const base: BodyWithJwt = { content: trimmed, receiverId: otherId };
-      const body: BodyWithJwt | BodyGuest = jwt
-        ? base
-        : {
-            ...base,
-            guestId: localStorage.getItem(LS_KEY_GUEST) ?? ensureGuestId(),
-          };
+
+      // Om vi inte är inloggade måste vi skicka med guestId (nu från Zustand/ref, inte localStorage)
+      const activeGuestId = effectiveGuestId ?? crypto.randomUUID(); // fallback om något skulle saknas
+      const body: BodyWithJwt | BodyGuest = jwt ? base : { ...base, guestId: activeGuestId };
 
       const res = await fetch("/api/messages", {
         method: "POST",
