@@ -73,7 +73,7 @@ export default function FrontPage() {
 
   return (
     <section className="user-section">
-  <h1>Vänner</h1>
+  <h1>Friends</h1>
 
   {loading && <p>Laddar användare...</p>}
   {error && <p>{error}</p>}
@@ -96,7 +96,7 @@ export default function FrontPage() {
           )}
         </li>
       ))}
-      {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
+      {users.length === 0 && <li>No other registerd users</li>}
     </ul>
   )}
 

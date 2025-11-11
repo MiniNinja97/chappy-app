@@ -140,13 +140,13 @@ export default function SettingsPage() {
 
   return (
     <section>
-      <h2>Inställningar</h2>
+      <h2>My settings</h2>
 
-      <div style={{ marginBottom: "0.5rem" }}>
+      {/* <div style={{ marginBottom: "0.5rem" }}>
         <button type="button" onClick={() => navigate("/frontPage")}>
           ⬅ Till startsidan
         </button>
-      </div>
+      </div> */}
 
       {loading && <p>Laddar dina kanaler…</p>}
       {error && !loading && <p role="alert">{error}</p>}
@@ -173,14 +173,14 @@ export default function SettingsPage() {
               </li>
             ))}
             {channels.length === 0 && (
-              <li>Du har inte skapat några kanaler ännu.</li>
+              <li>You have no channels yet</li>
             )}
           </ul>
 
           <hr />
 
           <div>
-            <p>Fara: Att radera ditt konto går inte att ångra.</p>
+            <p>Deleting your account i s permanent!!</p>
             <button
               type="button"
               onClick={handleDeleteAccount}

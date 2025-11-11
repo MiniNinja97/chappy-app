@@ -73,12 +73,12 @@ export default function Register() {
 
   return (
     <div className="register-form">
-      <h1>Skapa konto</h1>
+      <h1>Create an account</h1>
 
       <div className="register-field">
         
         <input
-        placeholder="Användarnamn"
+        placeholder="Username"
           id="username"
           type="text"
           value={formData.username}
@@ -89,7 +89,7 @@ export default function Register() {
 
         
         <input
-        placeholder="Lösenord"
+        placeholder="Password"
           id="password"
           type="password"
           value={formData.password}
@@ -100,7 +100,7 @@ export default function Register() {
 
         
         <input
-        placeholder="Upprepa lösenord"
+        placeholder="Repeat password"
           id="confirmPassword"
           type="password"
           value={formData.confirmPassword}
@@ -118,7 +118,7 @@ export default function Register() {
 
       <div className="register-actions">
         <button type="button" onClick={handleSubmitRegister}>
-          Registrera dig
+          Register
         </button>
       </div>
     </div>

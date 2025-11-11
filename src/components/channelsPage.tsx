@@ -129,16 +129,16 @@ export default function ChannelsPage() {
 
   return (
     <section>
-      <h2>Kanaler</h2>
+      <h2>Channels</h2>
 
-      <div>
+      {/* <div>
         <button type="button" onClick={() => navigate("/frontPage")}>
           ⬅ Till användare
         </button>
-      </div>
+      </div> */}
 
       <div>
-        <h3>Skapa ny kanal</h3>
+        <h3>New channel</h3>
 
         <div>
           <label htmlFor="channel-name">Namn</label>
@@ -152,7 +152,7 @@ export default function ChannelsPage() {
         </div>
 
         <div>
-          <label htmlFor="channel-desc">Beskrivning</label>
+          <label htmlFor="channel-desc">Description</label>
           <input
             id="channel-desc"
             type="text"
@@ -176,7 +176,7 @@ export default function ChannelsPage() {
             disabled={!isLoggedIn}
           />
           <label htmlFor="channel-access" style={{ marginLeft: "0.5rem" }}>
-            Öppen kanal (gäster kan se)
+            Public 
           </label>
         </div>
 
@@ -215,7 +215,7 @@ export default function ChannelsPage() {
               </li>
             );
           })}
-          {channels.length === 0 && <li>Inga kanaler ännu.</li>}
+          {channels.length === 0 && <li>You have no channels</li>}
         </ul>
       )}
     </section>

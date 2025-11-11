@@ -151,7 +151,7 @@ export default function DmPage() {
   return (
     <section>
       <button onClick={() => navigate("/frontPage")}>⬅ Tillbaka</button>
-      <h2>Direktmeddelanden</h2>
+      <h2>Messages</h2>
       {loading && <p>Laddar…</p>}
       {error && !loading && <p>{error}</p>}
 
@@ -164,7 +164,7 @@ export default function DmPage() {
                 {m.content}
               </li>
             ))}
-            {convo.length === 0 && <li>Inga meddelanden ännu.</li>}
+            {convo.length === 0 && <li>No messages </li>}
           </ul>
 
           <div>
@@ -172,10 +172,10 @@ export default function DmPage() {
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Skriv ett meddelande…"
+              placeholder="Write something"
             />
             <button type="button" onClick={handleSend}>
-              Skicka
+              Send
             </button>
           </div>
         </>

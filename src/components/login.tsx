@@ -85,7 +85,7 @@ export default function Login() {
       <div className="login-field">
         
         <input
-          placeholder="Användarnamn"
+          placeholder="Username"
           id="username"
           type="text"
           value={formData.username}
@@ -97,7 +97,7 @@ export default function Login() {
 
         
         <input
-          placeholder="Lösenord"
+          placeholder="Password"
           id="password"
           type="password"
           value={formData.password}
@@ -121,7 +121,7 @@ export default function Login() {
         <button type="button" onClick={handleGuest}>
           Fortsätt som gäst
         </button>
-        <Link className="link" to="/register">Inget konto? Registrera dig!</Link>
+        <Link className="link" to="/register">No account? Get registerd here!</Link>
       </div>
     </div>
   );

@@ -238,8 +238,8 @@ export default function ChannelChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder={
             !canWrite
-              ? "Låst kanal – logga in för att skriva"
-              : "Skriv ett meddelande..."
+              ? "Not public"
+              : "Write something..."
           }
           className="chat-input"
           disabled={!canWrite} // disable input om  gäst
