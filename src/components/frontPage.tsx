@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
+import './styles/frontpage.css';
 
 export interface User {
   userId: string;
@@ -71,46 +72,49 @@ export default function FrontPage() {
   }, [loadUsers]);
 
   return (
-    <section>
-      <h1>Välkommen till Chappy App</h1>
-      {loading && <p>Laddar användare...</p>}
-      {error && <p>{error}</p>}
-      {!loading && !error && (
-        <ul>
-          {users.map((u) => (
-            <li key={u.userId}>
-              {isLoggedIn ? (
-                <Link to={`/dm/${u.userId}`}>{u.username}</Link>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  title="Logga in för att skicka DM"
-                >
-                  {u.username}
-                </button>
-              )}
-            </li>
-          ))}
-          {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
-        </ul>
-      )}
+    <section className="user-section">
+  <h1>Vänner</h1>
 
-      <div>
-        <button type="button" onClick={() => navigate("/channels")}>
-          Visa kanaler
-        </button>
+  {loading && <p>Laddar användare...</p>}
+  {error && <p>{error}</p>}
 
-        <button
-          type="button"
-          onClick={() => navigate("/settings")}
-          disabled={!isLoggedIn}
-          title={!isLoggedIn ? "Logga in för att se dina kanaler" : ""}
-        >
-          Inställningar
-        </button>
-      </div>
-    </section>
+  {!loading && !error && (
+    <ul className="user-grid">
+      {users.map((u) => (
+        <li key={u.userId}>
+          {isLoggedIn ? (
+            <Link to={`/dm/${u.userId}`} className="user-card">
+              <p>{u.username}</p>
+            </Link>
+          ) : (
+            <div
+              className="user-card disabled"
+              title="Logga in för att skicka DM"
+            >
+              <p>{u.username}</p>
+            </div>
+          )}
+        </li>
+      ))}
+      {users.length === 0 && <li>Inga registrerade användare ännu.</li>}
+    </ul>
+  )}
+
+  {/* <div className="user-actions">
+    <button type="button" onClick={() => navigate("/channels")}>
+      Visa kanaler
+    </button>
+    <button
+      type="button"
+      onClick={() => navigate("/settings")}
+      disabled={!isLoggedIn}
+      title={!isLoggedIn ? "Logga in för att se dina kanaler" : ""}
+    >
+      Inställningar
+    </button>
+  </div> */}
+</section>
+
   );
 }
 

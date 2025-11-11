@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import App from "./App";
+import "./App.css";
 
 import Login from "./components/login";
 import FrontPage from "./components/frontPage";

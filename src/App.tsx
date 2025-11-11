@@ -1,13 +1,19 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import MenuBar from "./components/menuBar";
 import "./App.css";
 
 export default function App() {
+  const location = useLocation();
+  const hideMenu = location.pathname === "/login" || location.pathname === "/register";
+
   return (
     <div className="app">
-      
       <main>
         <Outlet />
       </main>
+      {!hideMenu && <MenuBar />}
     </div>
   );
 }
+
+

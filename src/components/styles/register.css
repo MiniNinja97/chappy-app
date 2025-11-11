@@ -1,0 +1,16 @@
+.register-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.register-field {
+    display: flex;
+    flex-direction: column;
+   
+}
+
+.register-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+} 

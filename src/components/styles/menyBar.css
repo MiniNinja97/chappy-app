@@ -1,0 +1,25 @@
+.menu-box {
+    background-color: #231f24;
+    margin-top: 2em;
+    padding: 1em;
+    border-radius: 2em;
+    box-shadow: 
+    0 3px 8px rgba(0, 0, 0, 0.5); 
+    position: fixed;
+    bottom: 1.5em;
+    
+    left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+} 
+
+button {
+
+    margin-left: 1em;
+    margin-right: 1em;
+}
+

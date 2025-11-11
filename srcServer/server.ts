@@ -49,9 +49,10 @@ app.use("/api/channel-messages", channelMessagesRouter);
 // Skapa HTTP-server och Socket.io
 const server = http.createServer(app);
 export const io = new Server(server, {
+  path: '/socket.io',     // matchar klienten och Vite-proxyn
   cors: {
-    origin: ["http://localhost:5173"], // frontend
-    methods: ["GET", "POST"],
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST'],
     credentials: true,
   },
 });

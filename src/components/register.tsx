@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "./zustandStorage";
+import './styles/register.css';
 
 interface FormData {
   username: string;
@@ -75,8 +76,9 @@ export default function Register() {
       <h1>Skapa konto</h1>
 
       <div className="register-field">
-        <label htmlFor="username">Användarnamn</label>
+        
         <input
+        placeholder="Användarnamn"
           id="username"
           type="text"
           value={formData.username}
@@ -85,8 +87,9 @@ export default function Register() {
           }
         />
 
-        <label htmlFor="password">Lösenord</label>
+        
         <input
+        placeholder="Lösenord"
           id="password"
           type="password"
           value={formData.password}
@@ -95,8 +98,9 @@ export default function Register() {
           }
         />
 
-        <label htmlFor="confirmPassword">Upprepa lösenord</label>
+        
         <input
+        placeholder="Upprepa lösenord"
           id="confirmPassword"
           type="password"
           value={formData.confirmPassword}

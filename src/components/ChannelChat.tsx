@@ -98,14 +98,14 @@ export default function ChannelChat() {
     if (!channelId) return;
 
     // skapa en ny socketinstans
-    // Anslut mot samma origin
+    // Anslut mot samma origin (Vite kör på 5173, proxas till 1337 via vite.config.ts)
     const s: Socket = io("/", {
       withCredentials: true,
-      // path är default den skrivs ut för tydlighet
-      path: "/socket.io",
+      path: "/socket.io", // måste matcha server.ts och vite-proxy
 
-      transports: ["websocket", "polling"],
+      // låt Socket.IO sköta transports automatiskt (polling → websocket)
     });
+
     socketRef.current = s;
 
     const onConnect = () => {
@@ -129,15 +129,21 @@ export default function ChannelChat() {
       }
     };
 
+    const onConnectError = (err: unknown) => {
+      console.error("socket connect_error:", err);
+    };
+
     // nedan registreras event/användare på socketen och i cleanup tas de bort
     // connect när socketen ansluter, channel:message - när servern skicar nytt meddelande
     s.on("connect", onConnect);
     s.on("channel:message", onChannelMessage);
+    s.on("connect_error", onConnectError);
 
     return () => {
       s.emit("channel:leave", { channelId }); // tala om för servern att vi lämnar kanalen
       s.off("channel:message", onChannelMessage); // avregistrera användare för att undvika dubbletter
       s.off("connect", onConnect); // avregistrera connect-handler
+      s.off("connect_error", onConnectError); // avregistrera error-handler
       s.disconnect(); // stäng anslutningen när komponenten tas bort
       socketRef.current = null;
     };
@@ -249,3 +255,4 @@ export default function ChannelChat() {
     </div>
   );
 }
+

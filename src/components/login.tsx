@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "./zustandStorage";
+import './styles/login.css';
+
+
 
 interface FormData {
   username: string;
@@ -80,8 +83,9 @@ export default function Login() {
       <h1>Chappy App</h1>
 
       <div className="login-field">
-        <label htmlFor="username">Användarnamn</label>
+        
         <input
+          placeholder="Användarnamn"
           id="username"
           type="text"
           value={formData.username}
@@ -91,8 +95,9 @@ export default function Login() {
           }
         />
 
-        <label htmlFor="password">Lösenord</label>
+        
         <input
+          placeholder="Lösenord"
           id="password"
           type="password"
           value={formData.password}
@@ -116,7 +121,7 @@ export default function Login() {
         <button type="button" onClick={handleGuest}>
           Fortsätt som gäst
         </button>
-        <Link to="/register">Inget konto? Registrera dig!</Link>
+        <Link className="link" to="/register">Inget konto? Registrera dig!</Link>
       </div>
     </div>
   );

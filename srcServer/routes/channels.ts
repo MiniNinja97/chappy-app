@@ -42,8 +42,7 @@ function sortChannels(items: ChannelMeta[]): ChannelMeta[] {
 }
 
 
-   //Hämta alla kanaler
-   
+   // Hämta alla kanaler
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const scan = new ScanCommand({
@@ -56,12 +55,33 @@ router.get("/", async (_req: Request, res: Response) => {
     });
 
     const result: ScanCommandOutput = await db.send(scan);
+    const rawItems = result.Items ?? [];
 
-    // Validerar alla poster mot Zod-schema (slipper any)
-    const items = (result.Items ?? []).map((i) => channelMetaSchema.parse(i));
+    
+    const normalized = rawItems.map((item: any) => {
+      const creatorPK =
+        typeof item.creatorPK === "string"
+          ? item.creatorPK.startsWith("USER#")
+            ? item.creatorPK
+            : `USER#${item.creatorPK}`
+          : "USER#UNKNOWN"; // fallback om fältet saknas helt
+
+      return { ...item, creatorPK };
+    });
+
+    const validItems = normalized.flatMap((i) => {
+      const parsed = channelMetaSchema.safeParse(i);
+      if (!parsed.success) {
+        console.warn("Ogiltig kanal hittades och hoppades över:", parsed.error.format());
+        return [];
+      }
+      return [parsed.data];
+    });
 
     // Sorterar som tidigare
-    return res.status(200).send(sortChannels(items));
+    const sorted = sortChannels(validItems);
+
+    return res.status(200).send(sorted);
   } catch (err) {
     console.error("Fel vid hämtning av kanaler:", err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -70,6 +90,7 @@ router.get("/", async (_req: Request, res: Response) => {
       .send({ message: "Internt serverfel vid hämtning av kanaler", detail: msg });
   }
 });
+
 
 //Hämta alla kanaler skapade av inloggad användare
   
