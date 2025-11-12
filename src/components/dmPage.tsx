@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuthStore, selectJwt } from "./zustandStorage";
+import './styles/dmPage.css';
 
 
 
@@ -27,7 +28,7 @@ function getJwtUserId(token: string | null): string | null {
 export default function DmPage() {
   // Parametern heter userId i route /dm/:userId
   const { userId: otherId } = useParams<{ userId: string }>();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Ersätter localStorage
   const jwt = useAuthStore(selectJwt);
@@ -150,36 +151,36 @@ export default function DmPage() {
 
   return (
     <section>
-      <button onClick={() => navigate("/frontPage")}>⬅ Tillbaka</button>
-      <h2>Messages</h2>
-      {loading && <p>Laddar…</p>}
-      {error && !loading && <p>{error}</p>}
+  <h2>Messages</h2>
+  {loading && <p>Laddar…</p>}
+  {error && !loading && <p>{error}</p>}
 
-      {!loading && !error && (
-        <>
-          <ul>
-            {convo.map((m) => (
-              <li key={m.SK}>
-                <strong>{m.senderId === myId ? "Du" : "Hen"}:</strong>{" "}
-                {m.content}
-              </li>
-            ))}
-            {convo.length === 0 && <li>No messages </li>}
-          </ul>
-
-          <div>
-            <input
-              type="text"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write something"
-            />
-            <button type="button" onClick={handleSend}>
-              Send
-            </button>
+  {!loading && !error && (
+    <>
+      <div className="chat">
+        {convo.length === 0 && <p>No messages</p>}
+        {convo.map((m) => (
+          <div
+            key={m.SK}
+            className={`bubble ${m.senderId === myId ? "me" : "other"}`}
+          >
+            <p>{m.content}</p>
           </div>
-        </>
-      )}
-    </section>
+        ))}
+      </div>
+
+      <div className="chat-input">
+        <input
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Write something"
+        />
+        <button className="send" type="button" onClick={handleSend}>Send</button>
+      </div>
+    </>
+  )}
+</section>
+
   );
 }

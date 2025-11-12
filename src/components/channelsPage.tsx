@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import './styles/channelsPage.css';
 
 
 import {
@@ -128,41 +129,31 @@ export default function ChannelsPage() {
   }
 
   return (
-    <section>
+     <section className="channel-section">
       <h2>Channels</h2>
 
-      {/* <div>
-        <button type="button" onClick={() => navigate("/frontPage")}>
-          ⬅ Till användare
-        </button>
-      </div> */}
-
-      <div>
+      <div className="channel-create">
         <h3>New channel</h3>
 
-        <div>
-          <label htmlFor="channel-name">Namn</label>
-          <input
-            id="channel-name"
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            disabled={!isLoggedIn}
-          />
-        </div>
+        <input
+          placeholder="Channel name"
+          id="channel-name"
+          type="text"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          disabled={!isLoggedIn}
+        />
 
-        <div>
-          <label htmlFor="channel-desc">Description</label>
-          <input
-            id="channel-desc"
-            type="text"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            disabled={!isLoggedIn}
-          />
-        </div>
+        <input
+          placeholder="Description"
+          id="channel-desc"
+          type="text"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          disabled={!isLoggedIn}
+        />
 
-        <div style={{ marginTop: "0.5rem" }}>
+        <div className="channel-access">
           <input
             id="channel-access"
             type="checkbox"
@@ -175,9 +166,7 @@ export default function ChannelsPage() {
             }
             disabled={!isLoggedIn}
           />
-          <label htmlFor="channel-access" style={{ marginLeft: "0.5rem" }}>
-            Public 
-          </label>
+          <label htmlFor="channel-access">Public</label>
         </div>
 
         <button
@@ -185,7 +174,6 @@ export default function ChannelsPage() {
           onClick={handleCreateChannel}
           disabled={!isLoggedIn || creating}
           title={!isLoggedIn ? "Logga in för att skapa kanaler" : ""}
-          style={{ marginTop: "0.5rem" }}
         >
           {creating ? "Skapar…" : "Skapa kanal"}
         </button>
@@ -195,27 +183,43 @@ export default function ChannelsPage() {
       {error && !loading && <p role="alert">{error}</p>}
 
       {!loading && !error && (
-        <ul>
+        <ul className="channel-grid">
           {channels.map((c) => {
             const isLocked = c.access === "locked";
-            
             const disabled = isLocked && !isLoggedIn;
 
             return (
               <li key={c.channelId}>
                 {disabled ? (
-                  <button type="button" disabled title="Låst kanal">
-                    {c.channelName}
-                  </button>
+                  <div
+                    className="channel-card disabled"
+                    title="Låst kanal – logga in för att gå med"
+                  >
+                    <p>
+                      {c.channelName}
+                      <br />
+                      <small>{c.description || "No description"}</small>
+                    </p>
+                    <span className="badge locked">Locked</span>
+                  </div>
                 ) : (
-                  <Link to={`/channels/${c.channelId}`}>
-                    {c.channelName} {isLocked}
+                  <Link to={`/channels/${c.channelId}`} className="channel-card">
+                    <p>
+                      {c.channelName}
+                      <br />
+                      <small>{c.description || "No description"}</small>
+                    </p>
+                    <span
+                      className={`badge ${isLocked ? "locked" : "public"}`}
+                    >
+                      {isLocked ? "Locked" : "Public"}
+                    </span>
                   </Link>
                 )}
               </li>
             );
           })}
-          {channels.length === 0 && <li>You have no channels</li>}
+          {channels.length === 0 && <li>No channels yet</li>}
         </ul>
       )}
     </section>

@@ -1,0 +1,56 @@
+h2 {
+    color:#fff;
+    font-size: 4em;
+}
+
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+}
+
+/* Gemensam stil för alla bubblor */
+.bubble {
+   width: 50%;                /* alltid halva bredden */
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  line-height: 1.4;
+  font-size: 15px;
+  word-wrap: break-word;
+}
+
+/* Dina meddelanden */
+.bubble.me {
+  align-self: flex-end;
+  background: linear-gradient(to right, #7C01F6, #9A45EF);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+/* Den andras meddelanden */
+.bubble.other {
+  align-self: flex-start;
+  background: #ececec;
+  color: #333;
+  border-bottom-left-radius: 2px;
+}
+
+/* Inputfältet under chatten */
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-top: 1px solid #ddd;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
