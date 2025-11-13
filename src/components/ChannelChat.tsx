@@ -2,6 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuthStore, selectJwt } from "./zustandStorage";
+import './styles/channelsChat.css';
 
 
 
@@ -219,40 +220,47 @@ export default function ChannelChat() {
   if (!channel) return <p>Kanalen hittades inte.</p>;
 
   return (
-    <div className="chat-container">
-      <h1>
-        Chat – {channel.channelName} {channel.access === "locked"}
-      </h1>
+  <div className="chat-container">
+    <h1>
+      Chat – {channel.channelName} {channel.access === "locked" ? "🔒" : ""}
+    </h1>
 
-      <ul className="chat-messages">
-        {messages.map((m, i) => (
-          <li key={`${m.SK}-${i}`} className="chat-message">
-            {m.content}
-          </li>
-        ))}
-      </ul>
+   
+    <div className="chat">
+      {messages.length === 0 && <p>Inga meddelanden än</p>}
+      {messages.map((m, i) => {
+        
+        const mine = m.senderId === "me"; 
 
-      <form onSubmit={handleSubmit} className="chat-form">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            !canWrite
-              ? "Not public"
-              : "Write something..."
-          }
-          className="chat-input"
-          disabled={!canWrite} // disable input om  gäst
-        />
-        <button
-          type="submit"
-          className="chat-button"
-          disabled={!canWrite || !input.trim()} // disable knappen 
-        >
-          Skicka
-        </button>
-      </form>
+        return (
+          <div
+            key={`${m.SK}-${i}`}
+            className={`bubble ${mine ? "me" : "other"}`}
+          >
+            <p>{m.content}</p>
+          </div>
+        );
+      })}
     </div>
-  );
+
+    
+    <form onSubmit={handleSubmit} className="chat-form">
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={!canWrite ? "Not public" : "Write something..."}
+        className="chat-input"
+        disabled={!canWrite}
+      />
+      <button
+        type="submit"
+        className="chat-button"
+        disabled={!canWrite || !input.trim()}
+      >
+        Skicka
+      </button>
+    </form>
+  </div>
+);
 }
 

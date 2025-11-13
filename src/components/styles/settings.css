@@ -1,0 +1,26 @@
+.warning {
+    color: #fff;
+    font-size: 1.5em;
+}
+
+.my-channel {
+color: #fff;
+    font-size: 1.5em;
+    
+}
+
+.channel-list a {
+  color: #fff;              
+  text-decoration: none;    
+  font-size: 1.5em;         
+  font-weight: 500;         
+}
+
+.channel-list a:visited {
+  color: #fff;              
+}
+
+.channel-list a:hover {
+  color: #b27cff;           
+  text-decoration: none;
+}

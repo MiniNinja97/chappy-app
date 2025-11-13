@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
+import './styles/settings.css';
 
 type ChannelItem = {
   PK: string;
@@ -153,7 +154,7 @@ export default function SettingsPage() {
 
       {!loading && !error && (
         <>
-          <ul>
+          <ul className="channel-list">
             {channels.map((c) => (
               <li
                 key={c.channelId}
@@ -173,14 +174,14 @@ export default function SettingsPage() {
               </li>
             ))}
             {channels.length === 0 && (
-              <li>You have no channels yet</li>
+              <li className="my-channel">You have no channels yet</li>
             )}
           </ul>
 
           <hr />
 
           <div>
-            <p>Deleting your account i s permanent!!</p>
+            <p className="warning">Deleting your account i s permanent!!</p>
             <button
               type="button"
               onClick={handleDeleteAccount}

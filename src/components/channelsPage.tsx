@@ -193,7 +193,7 @@ export default function ChannelsPage() {
                 {disabled ? (
                   <div
                     className="channel-card disabled"
-                    title="Låst kanal – logga in för att gå med"
+                    title="Låst kanal,logga in för att gå med"
                   >
                     <p>
                       {c.channelName}

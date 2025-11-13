@@ -11,9 +11,9 @@ h2 {
   padding: 15px;
 }
 
-/* Gemensam stil för alla bubblor */
+
 .bubble {
-   width: 50%;                /* alltid halva bredden */
+   width: 50%;               
   min-height: 40px;
   padding: 10px 14px;
   border-radius: 18px;
@@ -22,7 +22,7 @@ h2 {
   word-wrap: break-word;
 }
 
-/* Dina meddelanden */
+
 .bubble.me {
   align-self: flex-end;
   background: linear-gradient(to right, #7C01F6, #9A45EF);
@@ -30,7 +30,7 @@ h2 {
   border-bottom-right-radius: 2px;
 }
 
-/* Den andras meddelanden */
+
 .bubble.other {
   align-self: flex-start;
   background: #ececec;
@@ -38,7 +38,7 @@ h2 {
   border-bottom-left-radius: 2px;
 }
 
-/* Inputfältet under chatten */
+
 .chat-input {
   display: flex;
   align-items: center;
