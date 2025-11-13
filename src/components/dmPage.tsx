@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, } from "react-router-dom";
 import { useAuthStore, selectJwt } from "./zustandStorage";
 import './styles/dmPage.css';
 

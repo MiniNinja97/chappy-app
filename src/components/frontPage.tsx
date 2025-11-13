@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
 import './styles/frontpage.css';
 
@@ -33,7 +33,7 @@ export default function FrontPage() {
   //  avkoda userId från JWT, om användaren är inloggad
   const me = getUserIdFromJWT(jwt);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const loadUsers = useCallback(async () => {
     setError("");

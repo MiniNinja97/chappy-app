@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 import './styles/channelsPage.css';
 
 
@@ -40,7 +40,7 @@ export default function ChannelsPage() {
     access: "public",
   });
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
  
   const jwt = useAuthStore(selectJwt);
