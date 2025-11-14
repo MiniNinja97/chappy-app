@@ -80,47 +80,47 @@ router.delete('/me', authMiddleware, async (req: AuthedRequest, res: Response<Re
 });
 
 // Skydda DELETE /:id så endast ägaren kan radera sitt konto
-router.delete('/:id', authMiddleware, async (req: AuthedRequest, res: Response<ResponseMessage>) => {
-  try {
-    const { id } = userIdParamSchema.parse(req.params);
-    const uid = req.userId;
+// router.delete('/:id', authMiddleware, async (req: AuthedRequest, res: Response<ResponseMessage>) => {
+//   try {
+//     const { id } = userIdParamSchema.parse(req.params);
+//     const uid = req.userId;
 
-    if (typeof uid !== 'string' || uid.length === 0) {
-      return res.status(401).send({ message: 'Ingen giltlig token' });
-    }
+//     if (typeof uid !== 'string' || uid.length === 0) {
+//       return res.status(401).send({ message: 'Ingen giltlig token' });
+//     }
 
-    // Tillåt bara att man raderar sig själv 
-    if (uid !== id) {
-      return res.status(403).send({ message: 'Du får inte radera denna användare' });
-    }
+//     // Tillåt bara att man raderar sig själv 
+//     if (uid !== id) {
+//       return res.status(403).send({ message: 'Du får inte radera denna användare' });
+//     }
 
-    await db.send(
-      new DeleteCommand({
-        TableName: tableName,
-        Key: { PK: `USER#${id}`, SK: 'METADATA' },
-        ConditionExpression: 'attribute_exists(PK)',
-      })
-    );
+//     await db.send(
+//       new DeleteCommand({
+//         TableName: tableName,
+//         Key: { PK: `USER#${id}`, SK: 'METADATA' },
+//         ConditionExpression: 'attribute_exists(PK)',
+//       })
+//     );
 
-    res.status(200).send({ message: 'Användare raderad' });
-  } catch (err) {
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      (err as { name?: string }).name === 'ZodError'
-    ) {
-      return res.status(400).json({ message: 'Ogiltigt userId' });
-    }
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      (err as { name?: string }).name === 'ConditionalCheckFailedException'
-    ) {
-      return res.status(404).send({ message: 'Användare hittades inte' });
-    }
-    console.error('Fel vid radering av användare:', err);
-    res.status(500).send({ message: 'Internt serverfel' });
-  }
-});
+//     res.status(200).send({ message: 'Användare raderad' });
+//   } catch (err) {
+//     if (
+//       typeof err === 'object' &&
+//       err !== null &&
+//       (err as { name?: string }).name === 'ZodError'
+//     ) {
+//       return res.status(400).json({ message: 'Ogiltigt userId' });
+//     }
+//     if (
+//       typeof err === 'object' &&
+//       err !== null &&
+//       (err as { name?: string }).name === 'ConditionalCheckFailedException'
+//     ) {
+//       return res.status(404).send({ message: 'Användare hittades inte' });
+//     }
+//     console.error('Fel vid radering av användare:', err);
+//     res.status(500).send({ message: 'Internt serverfel' });
+//   }
+// });
 
 export default router;
