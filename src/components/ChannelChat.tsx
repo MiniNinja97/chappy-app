@@ -44,7 +44,7 @@ export default function ChannelChat() {
 
   // Hämta kanalens historik
   useEffect(() => {
-    let active = true;
+    // let active = true;
 
     async function fetchHistory() {
       if (!channelId) return;
@@ -85,9 +85,9 @@ export default function ChannelChat() {
     }
 
     void fetchHistory();
-    return () => {
-      active = false;
-    };
+    // return () => {
+    //   active = false;
+    // };
   }, [channelId, jwt]);
 
   // skapa anslutning, gå med i kanal, ta emot och lämna
