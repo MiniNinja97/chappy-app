@@ -40,11 +40,12 @@ h2 {
 
 
 .chat-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 15px;
-  border-top: 1px solid #ddd;
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #111;
 }
 
 .chat-input input {

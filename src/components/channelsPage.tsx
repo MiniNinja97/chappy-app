@@ -166,7 +166,7 @@ export default function ChannelsPage() {
             }
             disabled={!isLoggedIn}
           />
-          <label htmlFor="channel-access">Public</label>
+          <label className="public" htmlFor="channel-access">Public</label>
         </div>
 
         <button

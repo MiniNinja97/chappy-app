@@ -48,45 +48,41 @@ export default function ChannelChat() {
   useEffect(() => {
     let active = true;
 
-    //  hämtar kanalinfo och tidigare meddelanden från API,
-    async function fetchHistory() {
-      if (!channelId) return;
-      setError("");
-      setLoading(true);
+   async function fetchHistory() {
+  if (!channelId) return;
+  setError("");
+  setLoading(true);
 
-      try {
-        // Försök först utan JWT
-        let res = await fetch(`/api/channel-messages/${channelId}`);
+  try {
+    const headers: Record<string, string> = {};
 
-        // Om servern säger 401 och vi har JWT — försök igen med token
-        if (res.status === 401 && jwt) {
-          res = await fetch(`/api/channel-messages/${channelId}`, {
-            headers: { Authorization: `Bearer ${jwt}` },
-          });
-        }
-
-        if (!res.ok) {
-          const body: { message?: string } | null = await res
-            .json()
-            .catch(() => null);
-          throw new Error(body?.message ?? "Kunde inte hämta chatmeddelanden");
-        }
-
-        const data: ChannelGetResponse = await res.json();
-        if (!active) return;
-
-        setChannel(data.channel);
-        const sorted = [...data.messages].sort((a, b) =>
-          a.SK.localeCompare(b.SK)
-        );
-        setMessages(sorted);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Ett fel har inträffat");
-        //  instanceof kollar att e verkligen är ett error-objekt
-      } finally {
-        setLoading(false);
-      }
+    // Om du har en JWT, skicka den direkt
+    if (jwt) {
+      headers.Authorization = `Bearer ${jwt}`;
     }
+
+    const res = await fetch(`/api/channel-messages/${channelId}`, { headers });
+
+    if (!res.ok) {
+      const body: { message?: string } | null = await res
+        .json()
+        .catch(() => null);
+      throw new Error(body?.message ?? "Kunde inte hämta chatmeddelanden");
+    }
+
+    const data: ChannelGetResponse = await res.json();
+
+    setChannel(data.channel);
+    const sorted = [...data.messages].sort((a, b) =>
+      a.SK.localeCompare(b.SK)
+    );
+    setMessages(sorted);
+  } catch (e) {
+    setError(e instanceof Error ? e.message : "Ett fel har inträffat");
+  } finally {
+    setLoading(false);
+  }
+}
 
     void fetchHistory();
     return () => {
@@ -99,12 +95,12 @@ export default function ChannelChat() {
     if (!channelId) return;
 
     // skapa en ny socketinstans
-    // Anslut mot samma origin (Vite kör på 5173, proxas till 1337 via vite.config.ts)
+   
     const s: Socket = io("/", {
       withCredentials: true,
-      path: "/socket.io", // måste matcha server.ts och vite-proxy
+      path: "/socket.io", 
 
-      // låt Socket.IO sköta transports automatiskt (polling → websocket)
+      
     });
 
     socketRef.current = s;
@@ -222,7 +218,7 @@ export default function ChannelChat() {
   return (
   <div className="chat-container">
     <h1>
-      Chat – {channel.channelName} {channel.access === "locked" ? "🔒" : ""}
+      Chat  {channel.channelName} {channel.access === "locked"}
     </h1>
 
    

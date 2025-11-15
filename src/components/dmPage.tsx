@@ -169,12 +169,13 @@ export default function DmPage() {
         ))}
       </div>
 
-      <div className="chat-input">
+      <div>
         <input
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Write something"
+          className="chat-input"
         />
         <button className="send" type="button" onClick={handleSend}>Send</button>
       </div>
