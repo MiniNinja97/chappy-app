@@ -1,32 +1,34 @@
-
-
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import type { ZodSchema } from "zod";
 import { jwtPayloadSchema } from "./validation.js";
 import z from "zod";
 
-
 export const logger: RequestHandler = (req, _res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 };
 
-// Ladda JWT hemlig nyckel 
- 
+// Ladda JWT hemlig nyckel
+
 const RAW_SECRET = process.env.JWT_SECRET;
 if (!RAW_SECRET) {
   throw new Error("JWT_SECRET saknas");
 }
 const JWT_SECRET: string = RAW_SECRET;
 
-
-export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   const authHeader = req.header("Authorization");
 
   // Kontrollera att headern finns och börjar med "Bearer "
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).send({ message: "Du måste vara inloggad för att se detta" });
+    res
+      .status(401)
+      .send({ message: "Du måste vara inloggad för att se detta" });
     return;
   }
 
@@ -52,7 +54,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     // Spara userId på req
     req.userId = parsed.data.userId;
 
-    next(); 
+    next();
   } catch (error: any) {
     if (error?.name === "TokenExpiredError") {
       res.status(401).send({ message: "Token har gått ut" });
@@ -70,7 +72,7 @@ export const validateBody = (schema: ZodSchema): RequestHandler => {
       res.status(400).send({
         success: false,
         message: "Valideringsfel",
-        errors: z.flattenError(result.error)
+        errors: z.flattenError(result.error),
       });
       return;
     }
@@ -79,13 +81,19 @@ export const validateBody = (schema: ZodSchema): RequestHandler => {
   };
 };
 
-//Response-validering 
- 
-export const validateResponse = (schema: ZodSchema, data: unknown, res: Response): boolean => {
+//Response-validering
+
+export const validateResponse = (
+  schema: ZodSchema,
+  data: unknown,
+  res: Response
+): boolean => {
   const parsed = schema.safeParse(data);
   if (!parsed.success) {
     console.log("Response valideringsfel: ", parsed.error.format());
-    res.status(500).send({ success: false, message: "Serverfel vid servergenerering" });
+    res
+      .status(500)
+      .send({ success: false, message: "Serverfel vid servergenerering" });
     return false;
   }
   res.send(parsed.data);

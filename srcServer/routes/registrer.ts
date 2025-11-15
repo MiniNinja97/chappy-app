@@ -1,4 +1,3 @@
-
 import express, { type Router, type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -20,15 +19,11 @@ if (!RAW_SECRET) {
 }
 const JWT_SECRET = RAW_SECRET;
 
-
 function signJwt(userId: string) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
 }
 
-
 const normalizeUsername = (u: string) => u.trim().toLowerCase();
-
-
 
 //  lyckad register
 type RegisterOk = {
@@ -42,7 +37,6 @@ type RegisterOk = {
   };
 };
 
-
 router.post(
   "/register",
   validateBody(signUpSchema),
@@ -51,18 +45,18 @@ router.post(
       const { username, password } = req.body as z.infer<typeof signUpSchema>;
       const normalized = normalizeUsername(username);
 
-      // userId 
+      // userId
       const userId = randomUUID();
 
       // hash
       const passwordHash = await bcrypt.hash(password, 10);
 
-      // user-item 
+      // user-item
       const newUser: User = {
         PK: `USER#${userId}`,
         SK: "METADATA",
         userId,
-        username: normalized,         // spara normaliserad variant
+        username: normalized, // spara normaliserad variant
         accessLevel: "user",
         type: "USER",
         passwordHash,
@@ -79,14 +73,14 @@ router.post(
       const putLookup = new PutCommand({
         TableName: tableName,
         Item: usernameLookupItem,
-        ConditionExpression: "attribute_not_exists(PK)", 
+        ConditionExpression: "attribute_not_exists(PK)",
       });
       await db.send(putLookup);
 
       const putUser = new PutCommand({
         TableName: tableName,
         Item: newUser,
-        ConditionExpression: "attribute_not_exists(PK)", 
+        ConditionExpression: "attribute_not_exists(PK)",
       });
       await db.send(putUser);
 
@@ -95,7 +89,9 @@ router.post(
       const decoded = jwt.verify(token, JWT_SECRET);
       const parsed = jwtPayloadSchema.safeParse(decoded);
       if (!parsed.success) {
-        return res.status(500).send({ message: "Kunde inte signera token korrekt" });
+        return res
+          .status(500)
+          .send({ message: "Kunde inte signera token korrekt" });
       }
 
       // svar

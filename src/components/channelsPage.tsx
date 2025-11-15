@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link,  } from "react-router-dom";
-import './styles/channelsPage.css';
+import { Link } from "react-router-dom";
+import "./styles/channelsPage.css";
 
-
-import {
-  useAuthStore,
-  selectJwt,
-  selectIsLoggedIn,
-} from "./zustandStorage";
+import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
 
 type ChannelItem = {
   PK: string;
@@ -42,7 +37,6 @@ export default function ChannelsPage() {
 
   // const navigate = useNavigate();
 
- 
   const jwt = useAuthStore(selectJwt);
   const isLoggedIn = useAuthStore(selectIsLoggedIn);
 
@@ -74,7 +68,7 @@ export default function ChannelsPage() {
     }
   }, []);
 
-  //  useEffect körs vid mount, när loadChannels-referensen ändras.Hämtar kanaler direkt (void loadChannels()).
+  
   // Lägger till en focus på window som laddar om listan varje gång
   //cleanup tas lyssnaren bort för att undvika dubbla anrop.
   useEffect(() => {
@@ -129,7 +123,7 @@ export default function ChannelsPage() {
   }
 
   return (
-     <section className="channel-section">
+    <section className="channel-section">
       <h2>Channels</h2>
 
       <div className="channel-create">
@@ -166,7 +160,9 @@ export default function ChannelsPage() {
             }
             disabled={!isLoggedIn}
           />
-          <label className="public" htmlFor="channel-access">Public</label>
+          <label className="public" htmlFor="channel-access">
+            Public
+          </label>
         </div>
 
         <button
@@ -180,7 +176,7 @@ export default function ChannelsPage() {
       </div>
 
       {loading && <p>Laddar kanaler…</p>}
-      {error && !loading && <p role="alert">{error}</p>}
+      {error && !loading && <p>{error}</p>}
 
       {!loading && !error && (
         <ul className="channel-grid">
@@ -203,15 +199,16 @@ export default function ChannelsPage() {
                     <span className="badge locked">Locked</span>
                   </div>
                 ) : (
-                  <Link to={`/channels/${c.channelId}`} className="channel-card">
+                  <Link
+                    to={`/channels/${c.channelId}`}
+                    className="channel-card"
+                  >
                     <p>
                       {c.channelName}
                       <br />
                       <small>{c.description || "No description"}</small>
                     </p>
-                    <span
-                      className={`badge ${isLocked ? "locked" : "public"}`}
-                    >
+                    <span className={`badge ${isLocked ? "locked" : "public"}`}>
                       {isLocked ? "Locked" : "Public"}
                     </span>
                   </Link>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
-import './styles/settings.css';
+import "./styles/settings.css";
 
 type ChannelItem = {
   PK: string;
@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const isLoggedIn = useAuthStore(selectIsLoggedIn);
   const clearJwt = useAuthStore((s) => s.clearJwt);
 
-  // 
+  
   useEffect(() => {
     if (!isLoggedIn) navigate("/frontPage", { replace: true });
   }, [isLoggedIn, navigate]);
@@ -46,21 +46,25 @@ export default function SettingsPage() {
       });
 
       if (res.status === 401) {
-        // token saknas/ogiltig → logga ut 
+        // token saknas/ogiltig → logga ut
         clearJwt();
         navigate("/frontPage", { replace: true });
         return;
       }
 
       if (!res.ok) {
-        const body: { message?: string } | null = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res
+          .json()
+          .catch(() => null);
         setError(body?.message ?? "Kunde inte hämta dina kanaler");
         setChannels([]);
         return;
       }
 
       const data = (await res.json()) as ChannelItem[];
-      setChannels([...data].sort((a, b) => a.channelName.localeCompare(b.channelName)));
+      setChannels(
+        [...data].sort((a, b) => a.channelName.localeCompare(b.channelName))
+      );
     } catch {
       setError("Nätverksfel. Försök igen.");
       setChannels([]);
@@ -77,7 +81,7 @@ export default function SettingsPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadMine, isLoggedIn]);
 
-  // Ta bort kanal 
+  // Ta bort kanal
   async function handleDeleteChannel(channelId: string) {
     if (!isLoggedIn || !jwt) return;
 
@@ -166,7 +170,7 @@ export default function SettingsPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleDeleteChannel(c.channelId)} 
+                  onClick={() => handleDeleteChannel(c.channelId)}
                   disabled={deletingId === c.channelId}
                 >
                   {deletingId === c.channelId ? "Tar bort…" : "Ta bort"}
@@ -195,4 +199,3 @@ export default function SettingsPage() {
     </section>
   );
 }
-

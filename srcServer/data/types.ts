@@ -30,7 +30,7 @@ export interface ChannelMessage {
 export interface Channel {
   PK: string;                  // "CHANNEL#<channelId>"
   SK: "CHANNELMETA";
-  channelId: string;           // ex. "c456" eller uuid
+  channelId: string;           //  uuid
   channelName: string;        
   access: "public" | "private";
   creatorId: string;           // userId som skapade kanalen

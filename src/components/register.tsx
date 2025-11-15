@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "./zustandStorage";
-import './styles/register.css';
+import "./styles/register.css";
 
 interface FormData {
   username: string;
@@ -29,7 +29,7 @@ export default function Register() {
   async function handleSubmitRegister() {
     setError("");
 
-    // Grundläggande validering
+    //  validering
     if (!formData.username.trim() || !formData.password.trim()) {
       setError("Fyll i både användarnamn och lösenord.");
       return;
@@ -58,8 +58,8 @@ export default function Register() {
 
       const data: RegisterSuccessResponse = await response.json();
 
-      // Om backend skickar med en token vid registrering kan vi lägga den i Zustand 
-     
+      // Om backend skickar med en token vid registrering kan vi lägga den i Zustand
+
       if (data.token) {
         setJwt(data.token);
       }
@@ -76,9 +76,8 @@ export default function Register() {
       <h1>Create an account</h1>
 
       <div className="register-field">
-        
         <input
-        placeholder="Username"
+          placeholder="Username"
           id="username"
           type="text"
           value={formData.username}
@@ -87,9 +86,8 @@ export default function Register() {
           }
         />
 
-        
         <input
-        placeholder="Password"
+          placeholder="Password"
           id="password"
           type="password"
           value={formData.password}
@@ -98,9 +96,8 @@ export default function Register() {
           }
         />
 
-        
         <input
-        placeholder="Repeat password"
+          placeholder="Repeat password"
           id="confirmPassword"
           type="password"
           value={formData.confirmPassword}
@@ -111,7 +108,7 @@ export default function Register() {
       </div>
 
       {error && (
-        <p className="register-error" role="alert">
+        <p className="register-error">
           {error}
         </p>
       )}

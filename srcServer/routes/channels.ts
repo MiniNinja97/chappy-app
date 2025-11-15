@@ -15,8 +15,7 @@ import { z } from "zod";
 
 const router: Router = express.Router();
 
-
-   //Zod-schema för hur en kanalpost ser ut i databasen
+//Zod-schema för hur en kanalpost ser ut i databasen
 
 export const channelMetaSchema = z.object({
   PK: z.string().startsWith("CHANNEL#"),
@@ -32,17 +31,15 @@ export const channelMetaSchema = z.object({
 
 export type ChannelMeta = z.infer<typeof channelMetaSchema>;
 
+//Hjälpfunktion för sortering
 
-   //Hjälpfunktion för sortering 
- 
 function sortChannels(items: ChannelMeta[]): ChannelMeta[] {
   return [...items].sort((a, b) =>
     String(a.channelName ?? a.PK).localeCompare(String(b.channelName ?? b.PK))
   );
 }
 
-
-   // Hämta alla kanaler
+// Hämta alla kanaler
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const scan = new ScanCommand({
@@ -57,14 +54,13 @@ router.get("/", async (_req: Request, res: Response) => {
     const result: ScanCommandOutput = await db.send(scan);
     const rawItems = result.Items ?? [];
 
-    
     const normalized = rawItems.map((item: any) => {
       const creatorPK =
         typeof item.creatorPK === "string"
           ? item.creatorPK.startsWith("USER#")
             ? item.creatorPK
             : `USER#${item.creatorPK}`
-          : "USER#UNKNOWN"; // fallback om fältet saknas helt
+          : "USER#UNKNOWN"; 
 
       return { ...item, creatorPK };
     });
@@ -72,7 +68,10 @@ router.get("/", async (_req: Request, res: Response) => {
     const validItems = normalized.flatMap((i) => {
       const parsed = channelMetaSchema.safeParse(i);
       if (!parsed.success) {
-        console.warn("Ogiltig kanal hittades och hoppades över:", parsed.error.format());
+        console.warn(
+          "Ogiltig kanal hittades och hoppades över:",
+          parsed.error.format()
+        );
         return [];
       }
       return [parsed.data];
@@ -87,20 +86,21 @@ router.get("/", async (_req: Request, res: Response) => {
     const msg = err instanceof Error ? err.message : String(err);
     return res
       .status(500)
-      .send({ message: "Internt serverfel vid hämtning av kanaler", detail: msg });
+      .send({
+        message: "Internt serverfel vid hämtning av kanaler",
+        detail: msg,
+      });
   }
 });
 
-
 //Hämta alla kanaler skapade av inloggad användare
-  
+
 router.get("/mine", authMiddleware, async (req: Request, res: Response) => {
   try {
     if (typeof req.userId !== "string") {
       return res.status(401).send({ message: "Ingen giltlig token" });
     }
 
-    
     const scan = new ScanCommand({
       TableName: tableName,
       FilterExpression:
@@ -128,9 +128,8 @@ router.get("/mine", authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+//Hämta en kanal och alla dess meddelanden
 
-   //Hämta en kanal och alla dess meddelanden
-   
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -174,8 +173,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-
-   //Skapa ny kanal
+//Skapa ny kanal
 
 router.post(
   "/",
@@ -183,7 +181,11 @@ router.post(
   validateBody(channelSchema),
   async (req: Request, res: Response) => {
     try {
-      const { name, description, access = "public" } = req.body as {
+      const {
+        name,
+        description,
+        access = "public",
+      } = req.body as {
         name: string;
         description?: string;
         access?: "public" | "locked";
@@ -223,7 +225,9 @@ router.post(
         err !== null &&
         (err as { name?: string }).name === "ConditionalCheckFailedException"
       ) {
-        return res.status(409).send({ message: "Kunde inte skapa en ny kanal" });
+        return res
+          .status(409)
+          .send({ message: "Kunde inte skapa en ny kanal" });
       }
       console.error("Fel vid kanal-skapande:", err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -235,9 +239,8 @@ router.post(
   }
 );
 
+//Ta bort kanal (endast skaparen)
 
-   //Ta bort kanal (endast skaparen)
-  
 router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -289,8 +292,5 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
     });
   }
 });
-
-
-   
 
 export default router;

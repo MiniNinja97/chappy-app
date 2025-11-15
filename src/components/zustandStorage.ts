@@ -1,6 +1,4 @@
-
 import { create } from "zustand";
-
 
 export const LS_KEY_JWT = "jwt";
 
@@ -23,8 +21,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   setGuestId: (id) => set({ guestId: id }),
   clearGuestId: () => set({ guestId: null }),
 }));
-
-
 
 export const selectJwt = (s: AuthState): string | null => s.jwt;
 export const selectIsLoggedIn = (s: AuthState): boolean => Boolean(s.jwt);

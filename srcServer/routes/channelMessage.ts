@@ -14,7 +14,6 @@ import type { ResponseMessage } from "../data/types.js";
 
 const router: Router = express.Router();
 
-
 const RAW_SECRET = process.env.JWT_SECRET;
 if (!RAW_SECRET) throw new Error("JWT_SECRET saknas");
 const JWT_SECRET = RAW_SECRET;
@@ -40,44 +39,46 @@ async function getChannelMeta(channelId: string) {
       Key: { PK: `CHANNEL#${channelId}`, SK: "CHANNELMETA" },
     })
   );
-  return (meta.Item as null | { access?: "public" | "locked"; [k: string]: any }) ?? null;
+  return (
+    (meta.Item as null | { access?: "public" | "locked"; [k: string]: any }) ??
+    null
+  );
 }
 
+router.get(
+  "/",
+  async (_req: Request, res: Response<any[] | ResponseMessage>) => {
+    try {
+      const scan = new ScanCommand({
+        TableName: tableName,
+        FilterExpression: "begins_with(PK, :p)",
+        ExpressionAttributeValues: { ":p": "CHANNELMSG#" },
+      });
 
-router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) => {
-  try {
-    const scan = new ScanCommand({
-      TableName: tableName,
-      FilterExpression: "begins_with(PK, :p)",
-      ExpressionAttributeValues: { ":p": "CHANNELMSG#" },
-    });
+      const result: ScanCommandOutput = await db.send(scan);
+      const items = (result.Items ?? []).sort((a, b) =>
+        String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
+      );
 
-    const result: ScanCommandOutput = await db.send(scan);
-    const items = (result.Items ?? []).sort((a, b) =>
-      String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
-    );
-
-    return res.status(200).send(items);
-  } catch (err) {
-    console.error("Fel vid hämtning av alla kanalmeddelanden:", err);
-    return res.status(500).send({ message: "Internt serverfel" });
+      return res.status(200).send(items);
+    } catch (err) {
+      console.error("Fel vid hämtning av alla kanalmeddelanden:", err);
+      return res.status(500).send({ message: "Internt serverfel" });
+    }
   }
-});
+);
 
-//Öppna kanaler (public): alla får läsa Låsta kanaler (locked): kräver JWT 
- 
- 
- 
- 
+//Öppna kanaler (public) alla får läsa. Låsta kanaler (locked) kräver JWT
+
 router.get("/:channelId", async (req: Request, res: Response) => {
   try {
-    // Säkerställ att channelId är en sträng 
+    // Säkerställ att channelId är en sträng
     const { channelId } = req.params as { channelId: string };
     if (!channelId) {
       return res.status(400).send({ message: "Saknar channelId" });
     }
 
-    // Hämta metadata för kanalen 
+    // Hämta metadata för kanalen
     const meta = await getChannelMeta(channelId);
     if (!meta) {
       return res.status(404).send({ message: "Kanalen hittades inte" });
@@ -87,14 +88,16 @@ router.get("/:channelId", async (req: Request, res: Response) => {
     const access = meta.access ?? "public"; // defaulta till public om fältet saknas
     const isLocked = access === "locked";
 
-    // Om kanalen är låst kräver vi att användaren är inloggad 
+    // Om kanalen är låst kräver vi att användaren är inloggad
     if (isLocked && !jwtUserId) {
       return res
         .status(401)
-        .send({ message: "Den här kanalen är låst. Logga in för att se innehållet." });
+        .send({
+          message: "Den här kanalen är låst. Logga in för att se innehållet.",
+        });
     }
 
-    // Hämta alla meddelanden i kanalen 
+    // Hämta alla meddelanden i kanalen
     const query = new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: "PK = :pk AND begins_with(SK, :ts)",
@@ -105,7 +108,7 @@ router.get("/:channelId", async (req: Request, res: Response) => {
     });
 
     const result = await db.send(query);
-    // Sortera stigande på SK 
+    // Sortera stigande på SK
     const messages = (result.Items ?? []).sort((a, b) =>
       String(a.SK ?? "").localeCompare(String(b.SK ?? ""))
     );
@@ -120,18 +123,15 @@ router.get("/:channelId", async (req: Request, res: Response) => {
   }
 });
 
-
-  
-
- 
- 
- 
 router.post(
   "/",
-  validateBody(createChannelMessageSchema), // validera att vi har { channelId, content }
+  validateBody(createChannelMessageSchema), // validera att vi har channelId och content 
   async (req: Request, res: Response) => {
     try {
-      const { channelId, content } = req.body as { channelId: string; content: string };
+      const { channelId, content } = req.body as {
+        channelId: string;
+        content: string;
+      };
 
       if (!channelId) {
         return res.status(400).send({ message: "Saknar channelId" });
@@ -151,15 +151,17 @@ router.post(
       if (isLocked && !jwtUserId) {
         return res
           .status(401)
-          .send({ message: "Den här kanalen är låst. Logga in för att skriva." });
+          .send({
+            message: "Den här kanalen är låst. Logga in för att skriva.",
+          });
       }
 
       // Bestäm avsändare
-      // public: JWT-userId om inloggad annars "GUEST"
-      // locked: JWT-userId 
-      const senderId = isLocked ? (jwtUserId as string) : (jwtUserId ?? "GUEST");
+      // public JWT-userId om inloggad annars guest
+      // locked JWT-userId
+      const senderId = isLocked ? (jwtUserId as string) : jwtUserId ?? "GUEST";
 
-      // Spara med PK/ SK där SK är tidsstämpel (sorterbar)
+      // Spara med PK/ SK där SK är tidsstämpel 
       const pk = `CHANNELMSG#${channelId}`;
       const sk = `Timestamp#${new Date().toISOString()}`;
 
@@ -168,13 +170,15 @@ router.post(
         SK: sk,
         content,
         receiverId: channelId, // mottagare = kanalen
-        senderId,              // avsändare = JWT-user eller "GUEST"
+        senderId, // avsändare = JWT-user eller guiest
         type: "MESSAGE",
       };
 
       await db.send(new PutCommand({ TableName: tableName, Item: item }));
 
-      return res.status(201).send({ message: "Kanalmeddelande sparat", data: item });
+      return res
+        .status(201)
+        .send({ message: "Kanalmeddelande sparat", data: item });
     } catch (err) {
       console.error("Fel vid skapande av kanalmeddelande:", err);
       return res.status(500).send({ message: "Internt serverfel" });
@@ -183,5 +187,3 @@ router.post(
 );
 
 export default router;
-
-

@@ -1,4 +1,3 @@
-
 import express, { type Router, type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -19,14 +18,10 @@ if (!RAW_SECRET) {
 }
 const JWT_SECRET = RAW_SECRET;
 
-
 function signJwt(userId: string) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
 }
 const normalize = (s: string) => s.trim().toLowerCase();
-
-
-
 
 router.post(
   "/login",
@@ -43,7 +38,9 @@ router.post(
       });
       const lookupRes = await db.send(getLookup);
       if (!lookupRes.Item) {
-        return res.status(401).send({ message: "Fel användarnamn eller lösenord" });
+        return res
+          .status(401)
+          .send({ message: "Fel användarnamn eller lösenord" });
       }
       const userId: string =
         (lookupRes.Item as any).userId ?? (lookupRes.Item as any).userId;
@@ -55,7 +52,6 @@ router.post(
       });
       const userRes = await db.send(getUser);
       if (!userRes.Item) {
-       
         return res.status(500).send({ message: "Inkonsistent användardata" });
       }
       const user = userRes.Item as User;
@@ -63,7 +59,9 @@ router.post(
       //Verifiera lösenord
       const ok = await bcrypt.compare(password, user.passwordHash);
       if (!ok) {
-        return res.status(401).send({ message: "Fel användarnamn eller lösenord" });
+        return res
+          .status(401)
+          .send({ message: "Fel användarnamn eller lösenord" });
       }
 
       // Gör token
@@ -73,7 +71,9 @@ router.post(
       const decoded = jwt.verify(token, JWT_SECRET);
       const parsed = jwtPayloadSchema.safeParse(decoded);
       if (!parsed.success) {
-        return res.status(500).send({ message: "Kunde inte signera token korrekt" });
+        return res
+          .status(500)
+          .send({ message: "Kunde inte signera token korrekt" });
       }
 
       return res.status(200).send({

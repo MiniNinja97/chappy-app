@@ -2,9 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuthStore, selectJwt } from "./zustandStorage";
-import './styles/channelsChat.css';
-
-
+import "./styles/channelsChat.css";
 
 type ChannelMeta = {
   PK: string;
@@ -48,41 +46,43 @@ export default function ChannelChat() {
   useEffect(() => {
     let active = true;
 
-   async function fetchHistory() {
-  if (!channelId) return;
-  setError("");
-  setLoading(true);
+    async function fetchHistory() {
+      if (!channelId) return;
+      setError("");
+      setLoading(true);
 
-  try {
-    const headers: Record<string, string> = {};
+      try {
+        const headers: Record<string, string> = {};
 
-    // Om du har en JWT, skicka den direkt
-    if (jwt) {
-      headers.Authorization = `Bearer ${jwt}`;
+        // Om du har en JWT, skicka den direkt
+        if (jwt) {
+          headers.Authorization = `Bearer ${jwt}`;
+        }
+
+        const res = await fetch(`/api/channel-messages/${channelId}`, {
+          headers,
+        });
+
+        if (!res.ok) {
+          const body: { message?: string } | null = await res
+            .json()
+            .catch(() => null);
+          throw new Error(body?.message ?? "Kunde inte hämta chatmeddelanden");
+        }
+
+        const data: ChannelGetResponse = await res.json();
+
+        setChannel(data.channel);
+        const sorted = [...data.messages].sort((a, b) =>
+          a.SK.localeCompare(b.SK)
+        );
+        setMessages(sorted);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Ett fel har inträffat");
+      } finally {
+        setLoading(false);
+      }
     }
-
-    const res = await fetch(`/api/channel-messages/${channelId}`, { headers });
-
-    if (!res.ok) {
-      const body: { message?: string } | null = await res
-        .json()
-        .catch(() => null);
-      throw new Error(body?.message ?? "Kunde inte hämta chatmeddelanden");
-    }
-
-    const data: ChannelGetResponse = await res.json();
-
-    setChannel(data.channel);
-    const sorted = [...data.messages].sort((a, b) =>
-      a.SK.localeCompare(b.SK)
-    );
-    setMessages(sorted);
-  } catch (e) {
-    setError(e instanceof Error ? e.message : "Ett fel har inträffat");
-  } finally {
-    setLoading(false);
-  }
-}
 
     void fetchHistory();
     return () => {
@@ -95,12 +95,10 @@ export default function ChannelChat() {
     if (!channelId) return;
 
     // skapa en ny socketinstans
-   
+
     const s: Socket = io("/", {
       withCredentials: true,
-      path: "/socket.io", 
-
-      
+      path: "/socket.io",
     });
 
     socketRef.current = s;
@@ -186,7 +184,7 @@ export default function ChannelChat() {
         throw new Error(body?.message ?? "Kunde inte skicka meddelandet");
       }
 
-      const nowISO = new Date().toISOString(); // skapar tidsstämpel i ISO
+      const nowISO = new Date().toISOString(); // skapar tidsstämpel 
       const newMsg: ChannelMessageItem = {
         PK: `CHANNELMSG#${channelId}`,
         SK: `Timestamp#${nowISO}`,
@@ -212,51 +210,47 @@ export default function ChannelChat() {
   }
 
   if (loading) return <p>Laddar kanal…</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (error) return <p>{error}</p>;
   if (!channel) return <p>Kanalen hittades inte.</p>;
 
   return (
-  <div className="chat-container">
-    <h1>
-      Chat  {channel.channelName} {channel.access === "locked"}
-    </h1>
+    <div className="chat-container">
+      <h1>
+        Chat {channel.channelName} {channel.access === "locked"}
+      </h1>
 
-   
-    <div className="chat">
-      {messages.length === 0 && <p>Inga meddelanden än</p>}
-      {messages.map((m, i) => {
-        
-        const mine = m.senderId === "me"; 
+      <div className="chat">
+        {messages.length === 0 && <p>Inga meddelanden än</p>}
+        {messages.map((m, i) => {
+          const mine = m.senderId === "me";
 
-        return (
-          <div
-            key={`${m.SK}-${i}`}
-            className={`bubble ${mine ? "me" : "other"}`}
-          >
-            <p>{m.content}</p>
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={`${m.SK}-${i}`}
+              className={`bubble ${mine ? "me" : "other"}`}
+            >
+              <p>{m.content}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <form onSubmit={handleSubmit} className="chat-form">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={!canWrite ? "Not public" : "Write something..."}
+          className="chat-input"
+          disabled={!canWrite}
+        />
+        <button
+          type="submit"
+          className="chat-button"
+          disabled={!canWrite || !input.trim()}
+        >
+          Skicka
+        </button>
+      </form>
     </div>
-
-    
-    <form onSubmit={handleSubmit} className="chat-form">
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder={!canWrite ? "Not public" : "Write something..."}
-        className="chat-input"
-        disabled={!canWrite}
-      />
-      <button
-        type="submit"
-        className="chat-button"
-        disabled={!canWrite || !input.trim()}
-      >
-        Skicka
-      </button>
-    </form>
-  </div>
-);
+  );
 }
-

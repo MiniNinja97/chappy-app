@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useParams, } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuthStore, selectJwt } from "./zustandStorage";
-import './styles/dmPage.css';
-
-
+import "./styles/dmPage.css";
 
 type DmMessage = {
   PK: string;
@@ -33,13 +31,12 @@ export default function DmPage() {
   // Ersätter localStorage
   const jwt = useAuthStore(selectJwt);
 
-
   const guestId = useAuthStore((s) => s.guestId as string | null);
   const setGuestId = useAuthStore((s) => s.setGuestId as (id: string) => void);
 
-  // Vi vill säkerställa att gästen får ett stabilt ID under hela sessions-livscykeln,
-  // utan att skriva till localStorage. För att undvika "side-effects in render"
-  // genererar vi ett temporärt ID i en ref och synkar in det till Zustand i useEffect.
+  //  säkerställer att gästen får ett säkert id under hela användningsperioden,
+  
+  // genererar  ett temporärt id i en ref och synkar in det till zustand i useEffect.
   const pendingGuestIdRef = useRef<string | null>(null);
   if (!guestId && !pendingGuestIdRef.current) {
     pendingGuestIdRef.current = crypto.randomUUID();
@@ -50,13 +47,13 @@ export default function DmPage() {
     }
   }, [guestId, setGuestId]);
 
-  
   const effectiveGuestId: string | null = guestId ?? pendingGuestIdRef.current;
 
   // UserId från JWT om inloggad
   const userId = getJwtUserId(jwt);
   //  registrerad user eller gästanvändare
-  const myId = userId ?? (effectiveGuestId ? `GUEST#${effectiveGuestId}` : "GUEST#");
+  const myId =
+    userId ?? (effectiveGuestId ? `GUEST#${effectiveGuestId}` : "GUEST#");
 
   const [allMessages, setAllMessages] = useState<DmMessage[]>([]);
   const [error, setError] = useState<string>("");
@@ -70,7 +67,9 @@ export default function DmPage() {
     try {
       const res = await fetch("/api/messages");
       if (!res.ok) {
-        const body: { message?: string } | null = await res.json().catch(() => null);
+        const body: { message?: string } | null = await res
+          .json()
+          .catch(() => null);
         setError(body?.message ?? "Kunde inte hämta meddelanden");
         setAllMessages([]);
         return;
@@ -89,7 +88,7 @@ export default function DmPage() {
   // useMemo minns ett värde, det minskar onödig filtrering/sortering
   //  convo är den aktiva tråden mellan myId/jag som skickar meddelandet och otherId som tar emot meddelandet
   //  Returnerar tom lista om vi saknar otherId.
-  
+
   const convo = useMemo<DmMessage[]>(() => {
     if (!otherId) return [];
     return allMessages
@@ -128,7 +127,9 @@ export default function DmPage() {
 
       // Om vi inte är inloggade måste vi skicka med guestId från Zustand
       const activeGuestId = effectiveGuestId ?? crypto.randomUUID(); // fallback om något skulle saknas
-      const body: BodyWithJwt | BodyGuest = jwt ? base : { ...base, guestId: activeGuestId };
+      const body: BodyWithJwt | BodyGuest = jwt
+        ? base
+        : { ...base, guestId: activeGuestId };
 
       const res = await fetch("/api/messages", {
         method: "POST",
@@ -151,37 +152,38 @@ export default function DmPage() {
 
   return (
     <section>
-  <h2>Messages</h2>
-  {loading && <p>Laddar…</p>}
-  {error && !loading && <p>{error}</p>}
+      <h2>Messages</h2>
+      {loading && <p>Laddar…</p>}
+      {error && !loading && <p>{error}</p>}
 
-  {!loading && !error && (
-    <>
-      <div className="chat">
-        {convo.length === 0 && <p>No messages</p>}
-        {convo.map((m) => (
-          <div
-            key={m.SK}
-            className={`bubble ${m.senderId === myId ? "me" : "other"}`}
-          >
-            <p>{m.content}</p>
+      {!loading && !error && (
+        <>
+          <div className="chat">
+            {convo.length === 0 && <p>No messages</p>}
+            {convo.map((m) => (
+              <div
+                key={m.SK}
+                className={`bubble ${m.senderId === myId ? "me" : "other"}`}
+              >
+                <p>{m.content}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div>
-        <input
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Write something"
-          className="chat-input"
-        />
-        <button className="send" type="button" onClick={handleSend}>Send</button>
-      </div>
-    </>
-  )}
-</section>
-
+          <div>
+            <input
+              type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write something"
+              className="chat-input"
+            />
+            <button className="send" type="button" onClick={handleSend}>
+              Send
+            </button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

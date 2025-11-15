@@ -1,5 +1,3 @@
-
-
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
 import http from "http";
@@ -33,12 +31,11 @@ app.use(
   })
 );
 
-
 app.get("/api/ping", (req: Request, res: Response) => {
   res.send({ message: "Pong" });
 });
 
-// Routrar 
+// Routrar
 app.use("/api/users", userRouter);
 app.use("/api/register", registrerRouter);
 app.use("/api/auth", loginRouter);
@@ -49,10 +46,10 @@ app.use("/api/channel-messages", channelMessagesRouter);
 // Skapa HTTP-server och Socket.io
 const server = http.createServer(app);
 export const io = new Server(server, {
-  path: '/socket.io',     // matchar klienten och Vite-proxyn
+  path: "/socket.io", // matchar klienten och Vite-proxyn
   cors: {
-    origin: ['http://localhost:5173'],
-    methods: ['GET', 'POST'],
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });
@@ -104,7 +101,7 @@ console.log(
   jwtSecret ? "Ja, den laddar" : "Nej, laddas inte"
 );
 
-// Starta servern 
+// Starta servern
 server.listen(port, (error?: Error) => {
   if (error) {
     console.log("Server could not start! ", (error as any).message);

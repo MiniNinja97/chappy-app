@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link,  } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuthStore, selectJwt, selectIsLoggedIn } from "./zustandStorage";
-import './styles/frontpage.css';
+import "./styles/frontpage.css";
 
 export interface User {
   userId: string;
@@ -73,34 +73,34 @@ export default function FrontPage() {
 
   return (
     <section className="user-section">
-  <h1>Friends</h1>
+      <h1>Friends</h1>
 
-  {loading && <p>Laddar användare...</p>}
-  {error && <p>{error}</p>}
+      {loading && <p>Laddar användare...</p>}
+      {error && <p>{error}</p>}
 
-  {!loading && !error && (
-    <ul className="user-grid">
-      {users.map((u) => (
-        <li key={u.userId}>
-          {isLoggedIn ? (
-            <Link to={`/dm/${u.userId}`} className="user-card">
-              <p>{u.username}</p>
-            </Link>
-          ) : (
-            <div
-              className="user-card disabled"
-              title="Logga in för att skicka DM"
-            >
-              <p>{u.username}</p>
-            </div>
-          )}
-        </li>
-      ))}
-      {users.length === 0 && <li>No other registerd users</li>}
-    </ul>
-  )}
+      {!loading && !error && (
+        <ul className="user-grid">
+          {users.map((u) => (
+            <li key={u.userId}>
+              {isLoggedIn ? (
+                <Link to={`/dm/${u.userId}`} className="user-card">
+                  <p>{u.username}</p>
+                </Link>
+              ) : (
+                <div
+                  className="user-card disabled"
+                  title="Logga in för att skicka DM"
+                >
+                  <p>{u.username}</p>
+                </div>
+              )}
+            </li>
+          ))}
+          {users.length === 0 && <li>No other registerd users</li>}
+        </ul>
+      )}
 
-  {/* <div className="user-actions">
+      {/* <div className="user-actions">
     <button type="button" onClick={() => navigate("/channels")}>
       Visa kanaler
     </button>
@@ -113,8 +113,6 @@ export default function FrontPage() {
       Inställningar
     </button>
   </div> */}
-</section>
-
+    </section>
   );
 }
-

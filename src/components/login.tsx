@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "./zustandStorage";
-import './styles/login.css';
-
-
+import "./styles/login.css";
 
 interface FormData {
   username: string;
@@ -58,13 +56,11 @@ export default function Login() {
 
       const data: LoginSuccessResponse = await response.json();
 
-      // Spara token i Zustand 
+      // Spara token i Zustand
       setJwt(data.token);
 
-      
       clearGuestId();
 
-      
       navigate("/frontPage");
     } catch {
       setError("Nätverksfel. Försök igen.");
@@ -72,7 +68,6 @@ export default function Login() {
   }
 
   function handleGuest() {
-    
     clearJwt();
     setGuestId(crypto.randomUUID());
     navigate("/frontPage");
@@ -83,7 +78,6 @@ export default function Login() {
       <h1>Chappy App</h1>
 
       <div className="login-field">
-        
         <input
           placeholder="Username"
           id="username"
@@ -95,7 +89,6 @@ export default function Login() {
           }
         />
 
-        
         <input
           placeholder="Password"
           id="password"
@@ -109,7 +102,7 @@ export default function Login() {
       </div>
 
       {error && (
-        <p className="login-error" role="alert">
+        <p className="login-error">
           {error}
         </p>
       )}
@@ -121,9 +114,10 @@ export default function Login() {
         <button type="button" onClick={handleGuest}>
           Fortsätt som gäst
         </button>
-        <Link className="link" to="/register">No account? Get registerd here!</Link>
+        <Link className="link" to="/register">
+          No account? Get registerd here!
+        </Link>
       </div>
     </div>
   );
 }
-

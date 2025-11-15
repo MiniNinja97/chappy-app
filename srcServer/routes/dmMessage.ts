@@ -1,9 +1,13 @@
 
-// routes/dmMessage.ts
 import express, { type Router, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import { db, tableName } from "../data/dynamoDb.js";
-import { ScanCommand, PutCommand, GetCommand, type ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
+import {
+  ScanCommand,
+  PutCommand,
+  GetCommand,
+  type ScanCommandOutput,
+} from "@aws-sdk/lib-dynamodb";
 import { validateBody } from "../data/middleware.js";
 import { createDmSchema } from "../data/validation.js"; // vi utökar denna nedan
 import type { ResponseMessage } from "../data/types.js";
@@ -26,38 +30,41 @@ function getUserIdFromAuthHeader(req: Request): string | null {
   }
 }
 
-// --- GET /api/messages (oförändrad) ---
-router.get("/", async (_req: Request, res: Response<any[] | ResponseMessage>) => {
-  try {
-    const result: ScanCommandOutput = await db.send(
-      new ScanCommand({
-        TableName: tableName,
-        FilterExpression: "begins_with(PK, :prefix)",
-        ExpressionAttributeValues: { ":prefix": "MSG#" },
-      })
-    );
+// GET /api/messages 
+router.get(
+  "/",
+  async (_req: Request, res: Response<any[] | ResponseMessage>) => {
+    try {
+      const result: ScanCommandOutput = await db.send(
+        new ScanCommand({
+          TableName: tableName,
+          FilterExpression: "begins_with(PK, :prefix)",
+          ExpressionAttributeValues: { ":prefix": "MSG#" },
+        })
+      );
 
-    if (!result.Items || result.Items.length === 0) {
-      return res.status(404).send({ message: "Inga meddelanden hittades" });
+      if (!result.Items || result.Items.length === 0) {
+        return res.status(404).send({ message: "Inga meddelanden hittades" });
+      }
+
+      const sorted = [...result.Items].sort((a, b) =>
+        String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
+      );
+      return res.status(200).send(sorted);
+    } catch (err) {
+      console.error("Failed to scan messages:", err);
+      return res.status(500).send({ message: "Internt serverfel" });
     }
-
-    const sorted = [...result.Items].sort((a, b) =>
-      String(b.SK ?? "").localeCompare(String(a.SK ?? ""))
-    );
-    return res.status(200).send(sorted);
-  } catch (err) {
-    console.error("Failed to scan messages:", err);
-    return res.status(500).send({ message: "Internt serverfel" });
   }
-});
+);
 
-// --- POST /api/messages (JWT frivilligt + guestId stöds) ---
+//  POST /api/messages 
 router.post(
   "/",
-  validateBody(createDmSchema),   // se ändring i validation.ts nedan
+  validateBody(createDmSchema), 
   async (req: Request, res: Response) => {
     try {
-      const jwtUserId = getUserIdFromAuthHeader(req); 
+      const jwtUserId = getUserIdFromAuthHeader(req);
       if (!jwtUserId) {
         return res.status(401).send({ message: "Logga in för att skicka DM" });
       }
@@ -66,7 +73,7 @@ router.post(
         receiverId: string;
       };
 
-      // säkerhet: receiver måste finnas
+      // receiver måste finnas
       const receiver = await db.send(
         new GetCommand({
           TableName: tableName,
@@ -81,15 +88,24 @@ router.post(
       const senderId = jwtUserId;
 
       if (senderId === receiverId) {
-        return res.status(400).send({ message: "Du kan inte skicka meddelande till dig själv" });
+        return res
+          .status(400)
+          .send({ message: "Du kan inte skicka meddelande till dig själv" });
       }
 
-      // PK/ SK för konversation (sortera A, B för stabil nyckel)
+      // PK/ SK för konversationer
       const [A, B] = [senderId, receiverId].sort((x, y) => x.localeCompare(y));
       const pk = `MSG#${A}#${B}`;
       const sk = `Timestamp#${new Date().toISOString()}`;
 
-      const item = { PK: pk, SK: sk, content, senderId, receiverId, type: "MESSAGE" };
+      const item = {
+        PK: pk,
+        SK: sk,
+        content,
+        senderId,
+        receiverId,
+        type: "MESSAGE",
+      };
 
       await db.send(new PutCommand({ TableName: tableName, Item: item }));
 
@@ -102,12 +118,12 @@ router.post(
       console.error("Failed to send message:", err);
       return res
         .status(500)
-        .send({ success: false, message: "Internt serverfel vid skick av meddelande" });
+        .send({
+          success: false,
+          message: "Internt serverfel vid skick av meddelande",
+        });
     }
   }
 );
 
 export default router;
-
-
-
